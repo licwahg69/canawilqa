@@ -41,6 +41,9 @@
 @stop
 
 @section('content')
+@php
+    $pcredit = auth()->user()->credit;
+@endphp
 <form action="/resend_image" method="POST" id="view" name="view" class="formeli">
     @csrf
     <input type="hidden" id="transaction_id" name="transaction_id" value="">
@@ -62,7 +65,9 @@
                                     <thead class="bg-dark text-white">
                                         <tr>
                                             <th class="text-center">Tipo de Cambio</th>
-                                            <th class="text-center">Total General enviado</th>
+                                            <th class="text-center">Total General Recibido</th>
+                                            <th class="text-center">Total General Retenido</th>
+                                            <th class="text-center">Total General Enviado</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -72,7 +77,13 @@
                                                     <label style="font-size:20px">{{$dato2['a_to_b']}}</label>
                                                 </td>
                                                 <td class="text-right">
-                                                    <label style="color:darkblue; font-size:20px">{{$dato2['general_mount_value']}}</label>
+                                                    <label style="font-size:20px">{{$dato2['general_mount_value']}}</label>
+                                                </td>
+                                                <td class="text-right">
+                                                    <label style="color:red; font-size:20px">{{$dato2['general_amount_withheld']}}</label>
+                                                </td>
+                                                <td class="text-right">
+                                                    <label style="color:darkblue; font-size:20px">{{$dato2['general_send_amount']}}</label>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -99,10 +110,30 @@
                                         <td>
                                             <div class="row">
                                                 <div>
-                                                    <b>Total General enviado:</b>
+                                                    <b>Total General recibido:</b>
+                                                </div>
+                                                <div>
+                                                    <b>{{ $dato2['general_mount_value'] }}</b>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Total General Retenido:</b>
+                                                </div>
+                                                <div style="color: red">
+                                                    <b>{{ $dato2['general_amount_withheld'] }}</b>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Total General del día:</b>
                                                 </div>
                                                 <div style="color: blue">
-                                                    <b>{{ $dato2['general_mount_value'] }}</b>
+                                                    <b>{{ $dato2['general_send_amount'] }}</b>
                                                 </div>
                                             </div>
                                         </td>
@@ -118,11 +149,11 @@
                                 <tr>
                                     <th class="text-center">ID</th>
                                     <th class="text-center">Conversión</th>
-                                    <th class="text-center">Descripción</th>
                                     <th class="text-center">Pagador</th>
-                                    <th width="120" class="text-center">Monto a Cambiar</th>
-                                    <th width="120" class="text-center">Monto a Pagar</th>
-                                    <th width="100" class="text-center">Estatus</th>
+                                    <th width="120" class="text-center">Monto Recibido</th>
+                                    <th width="120" class="text-center">Monto Retenido</th>
+                                    <th width="120" class="text-center">Monto Enviado</th>
+                                    <th width="70" class="text-center">Estatus</th>
                                     <th width="30" class="text-center">Ver</th>
                                 </tr>
                             </thead>
@@ -131,24 +162,28 @@
                                     <tr>
                                         <td class="text-left">{{ $transaction->id }}</td>
                                         <td class="text-left">{{ $transaction->a_to_b }}</td>
-                                        <td class="text-left">{{ $transaction->complete_description }}</td>
                                         <td class="text-left">{{ $transaction->payer_name }}</td>
                                         <input type="hidden" id="nombre{{ $transaction->id }}"
                                             value="{{ $transaction->complete_description }}">
                                         <td width="120" class="text-right">{{ trim($transaction->mount_value_fm) }} {{$transaction->currency}}</td>
-                                        <td width="120" class="text-right">{{ trim($transaction->mount_change_fm) }} {{$transaction->currency2}}</td>
+                                        <td width="120" class="text-right">{{ trim($transaction->amount_withheld_fm) }} {{$transaction->currency}}</td>
+                                        @if ($transaction->credit == 'Y')
+                                            <td width="120" class="text-right text-red">{{ trim($transaction->net_amount_fm) }} {{$transaction->currency}} (*)</td>
+                                        @else
+                                            <td width="120" class="text-right">{{ trim($transaction->net_amount_fm) }} {{$transaction->currency}}</td>
+                                        @endif
                                         @switch($transaction->sendstatus)
                                             @case('ENV')
-                                                <td width="100" class="text-center text-primary">
+                                                <td width="70" class="text-center text-primary">
                                                 @break
                                             @case('REC')
-                                                <td width="100" class="text-center text-orange">
+                                                <td width="70" class="text-center text-orange">
                                                 @break
                                             @case('PRO')
-                                                <td width="100" class="text-center text-cyan">
+                                                <td width="70" class="text-center text-cyan">
                                                 @break
                                             @case('TRA')
-                                                <td width="100" class="text-center text-danger">
+                                                <td width="70" class="text-center text-danger">
                                                 @break
                                         @endswitch
                                         <i class="fas fa-traffic-light"></i> {{ $transaction->sendstatus_text }}</td>
@@ -190,16 +225,6 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
-                                        <div class="row">
-                                            <div>
-                                                <b>Descripción:</b>
-                                            </div>
-                                            <div>
-                                                {{ $transaction2->complete_description }}
-                                            </div>
-                                        </div>
-                                    </td>
                                     <input type="hidden" id="nombre{{ $transaction2->id }}"
                                                 value="{{ $transaction2->complete_description }}">
                                     <td>
@@ -215,7 +240,7 @@
                                     <td>
                                         <div class="row">
                                             <div>
-                                                <b>Monto a Cambiar:</b>
+                                                <b>Monto Recibido:</b>
                                             </div>
                                             <div>
                                                 {{ $transaction2->mount_value_fm }} {{$transaction2->currency}}
@@ -225,10 +250,24 @@
                                     <td>
                                         <div class="row">
                                             <div>
-                                                <b>Monto a Pagar:</b>
+                                                <b>Monto Retenido:</b>
                                             </div>
                                             <div>
-                                                {{ $transaction2->mount_change_fm }} {{$transaction2->currency2}}
+                                                {{ $transaction2->amount_withheld_fm }} {{$transaction2->currency}}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="row">
+                                            <div>
+                                                <b>Monto Enviado:</b>
+                                            </div>
+                                            <div>
+                                                @if ($transaction2->credit == 'Y')
+                                                    <label style="color:red">{{ $transaction2->net_amount_fm }} {{$transaction2->currency}} (*)</label>
+                                                @else
+                                                    {{ $transaction2->net_amount_fm }} {{$transaction2->currency}}
+                                                @endif
                                             </div>
                                         </div>
                                     </td>
@@ -270,6 +309,9 @@
                         <br>
                         {{ $transactions2->links() }}
                     </div>
+                    @if ($pcredit == 'Y')
+                        <label style="color:red">(*) Transacciones a crédito</label>
+                    @endif
                 </div>
             </div>
         </div>
@@ -284,7 +326,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 

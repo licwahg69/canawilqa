@@ -28,9 +28,12 @@ class WhatsappController extends Controller
         $splitArray2 = explode('klx', $part2);
         $transfer_id = $splitArray2[0];
 
-        $sql = "SELECT * FROM v_transfers where id = ".$transfer_id." and rowstatus = 'ACT'";
+        $sql = "SELECT * FROM v_transactions where id = ".$transfer_id." and rowstatus = 'ACT'";
         $transfers = DB::select($sql);
         $cellphone = $transfers[0]->cellphone;
+
+        $sql = "SELECT * FROM v_transfers where transaction_id = ".$transfer_id." and rowstatus = 'ACT'";
+        $transfers2 = DB::select($sql);
 
         $sql = "SELECT phone_code FROM countries WHERE '".$cellphone."' LIKE phone_code || '%'";
         $phonecode = DB::select($sql);
@@ -38,8 +41,7 @@ class WhatsappController extends Controller
 
         $onlycellphone = str_replace($phone_code, '', $cellphone);
 
-        return view('whatsapp.transfer', compact('transfers', 'phone_code', 'onlycellphone'));
-
-
+        return view('whatsapp.transfer', compact('transfers', 'transfers2', 'phone_code',
+        'onlycellphone'));
     }
 }

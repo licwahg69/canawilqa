@@ -53,58 +53,106 @@
                                     <th class="text-center">ID</th>
                                     <th class="text-center">Aliado o Usuario</th>
                                     <th class="text-center">Conversión</th>
-                                    <th class="text-center">Descripción</th>
-                                    <th width="80" class="text-center">Estatus</th>
+                                    <th width="160" class="text-center">Monto a transferir</th>
+                                    <th width="70" class="text-center">Estatus</th>
                                     <th class="text-center">Pagar</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($transactions as $transaction)
                                     <tr>
-                                        @if ($transaction->sendstatus == 'ENV')
-                                            <td class="text-left"><b>{{ $transaction->id }}</b></td>
-                                            <td class="text-left"><b>{{ $transaction->comercial_name }}</b></td>
-                                            <td class="text-left"><b>{{ $transaction->a_to_b }}</b></td>
-                                            <td class="text-left"><b>{{ $transaction->complete_description }}</b></td>
-                                            <input type="hidden" id="nombre{{ $transaction->id }}"
-                                                value="{{ $transaction->complete_description }}">
-                                            @switch($transaction->sendstatus)
-                                                @case('ENV')
-                                                    <td width="80" class="text-center text-primary">
-                                                    @break
-                                                @case('REC')
-                                                    <td width="80" class="text-center text-orange">
-                                                    @break
-                                                @case('PRO')
-                                                    <td width="80" class="text-center text-cyan">
-                                                    @break
-                                                @case('TRA')
-                                                    <td width="80" class="text-center text-danger">
-                                                    @break
-                                            @endswitch
-                                            <b><i class="fas fa-traffic-light"></i> {{ $transaction->sendstatus_text }}</b></td>
+                                        @if ($transaction->credit == 'Y')
+                                            @if ($transaction->sendstatus == 'ENV')
+                                                <td class="text-left text-danger"><b>{{ $transaction->id }}</b></td>
+                                                <td class="text-left text-danger"><b>{{ $transaction->comercial_name }}</b></td>
+                                                <td class="text-left text-danger"><b>{{ $transaction->a_to_b }}</b></td>
+                                                <td width="160" class="text-right text-danger"><b>{{ trim($transaction->mount_change_fm) }}{{$transaction->symbol2}} {{$transaction->currency2}}</b></td>
+                                                <input type="hidden" id="nombre{{ $transaction->id }}"
+                                                    value="{{ $transaction->complete_description }}">
+                                                @switch($transaction->sendstatus)
+                                                    @case('ENV')
+                                                        <td width="70" class="text-center text-primary">
+                                                        @break
+                                                    @case('REC')
+                                                        <td width="70" class="text-center text-orange">
+                                                        @break
+                                                    @case('PRO')
+                                                        <td width="70" class="text-center text-cyan">
+                                                        @break
+                                                    @case('TRA')
+                                                        <td width="70" class="text-center text-danger">
+                                                        @break
+                                                @endswitch
+                                                <b><i class="fas fa-traffic-light"></i> {{ $transaction->sendstatus_text }}</b></td>
+                                            @else
+                                                <td class="text-left text-danger">{{ $transaction->id }}</td>
+                                                <td class="text-left text-danger">{{ $transaction->comercial_name }}</td>
+                                                <td class="text-left text-danger">{{ $transaction->a_to_b }}</td>
+                                                <td width="160" class="text-right text-danger">{{ trim($transaction->mount_change_fm) }}{{$transaction->symbol2}} {{$transaction->currency2}}</td>
+                                                <input type="hidden" id="nombre{{ $transaction->id }}"
+                                                    value="{{ $transaction->complete_description }}">
+                                                @switch($transaction->sendstatus)
+                                                    @case('ENV')
+                                                        <td width="70" class="text-center text-primary">
+                                                        @break
+                                                    @case('REC')
+                                                        <td width="70" class="text-center text-orange">
+                                                        @break
+                                                    @case('PRO')
+                                                        <td width="70" class="text-center text-cyan">
+                                                        @break
+                                                    @case('TRA')
+                                                        <td width="70" class="text-center text-danger">
+                                                        @break
+                                                @endswitch
+                                                <i class="fas fa-traffic-light"></i> {{ $transaction->sendstatus_text }}</td>
+                                            @endif
                                         @else
-                                            <td class="text-left">{{ $transaction->id }}</td>
-                                            <td class="text-left">{{ $transaction->comercial_name }}</td>
-                                            <td class="text-left">{{ $transaction->a_to_b }}</td>
-                                            <td class="text-left">{{ $transaction->complete_description }}</td>
-                                            <input type="hidden" id="nombre{{ $transaction->id }}"
-                                                value="{{ $transaction->complete_description }}">
-                                            @switch($transaction->sendstatus)
-                                                @case('ENV')
-                                                    <td width="80" class="text-center text-primary">
-                                                    @break
-                                                @case('REC')
-                                                    <td width="80" class="text-center text-orange">
-                                                    @break
-                                                @case('PRO')
-                                                    <td width="80" class="text-center text-cyan">
-                                                    @break
-                                                @case('TRA')
-                                                    <td width="80" class="text-center text-danger">
-                                                    @break
-                                            @endswitch
-                                            <i class="fas fa-traffic-light"></i> {{ $transaction->sendstatus_text }}</td>
+                                            @if ($transaction->sendstatus == 'ENV')
+                                                <td class="text-left"><b>{{ $transaction->id }}</b></td>
+                                                <td class="text-left"><b>{{ $transaction->comercial_name }}</b></td>
+                                                <td class="text-left"><b>{{ $transaction->a_to_b }}</b></td>
+                                                <td width="160" class="text-right"><b>{{ trim($transaction->mount_change_fm) }}{{$transaction->symbol2}} {{$transaction->currency2}}</b></td>
+                                                <input type="hidden" id="nombre{{ $transaction->id }}"
+                                                    value="{{ $transaction->complete_description }}">
+                                                @switch($transaction->sendstatus)
+                                                    @case('ENV')
+                                                        <td width="70" class="text-center text-primary">
+                                                        @break
+                                                    @case('REC')
+                                                        <td width="70" class="text-center text-orange">
+                                                        @break
+                                                    @case('PRO')
+                                                        <td width="70" class="text-center text-cyan">
+                                                        @break
+                                                    @case('TRA')
+                                                        <td width="70" class="text-center text-danger">
+                                                        @break
+                                                @endswitch
+                                                <b><i class="fas fa-traffic-light"></i> {{ $transaction->sendstatus_text }}</b></td>
+                                            @else
+                                                <td class="text-left">{{ $transaction->id }}</td>
+                                                <td class="text-left">{{ $transaction->comercial_name }}</td>
+                                                <td class="text-left">{{ $transaction->a_to_b }}</td>
+                                                <td width="160" class="text-right">{{ trim($transaction->mount_change_fm) }}{{$transaction->symbol2}} {{$transaction->currency2}}</td>
+                                                <input type="hidden" id="nombre{{ $transaction->id }}"
+                                                    value="{{ $transaction->complete_description }}">
+                                                @switch($transaction->sendstatus)
+                                                    @case('ENV')
+                                                        <td width="70" class="text-center text-primary">
+                                                        @break
+                                                    @case('REC')
+                                                        <td width="70" class="text-center text-orange">
+                                                        @break
+                                                    @case('PRO')
+                                                        <td width="70" class="text-center text-cyan">
+                                                        @break
+                                                    @case('TRA')
+                                                        <td width="70" class="text-center text-danger">
+                                                        @break
+                                                @endswitch
+                                                <i class="fas fa-traffic-light"></i> {{ $transaction->sendstatus_text }}</td>
+                                            @endif
                                         @endif
                                         <td class="text-center">
                                             @if ($permissions > 1)
@@ -124,138 +172,274 @@
                             <tbody>
                                 @foreach($transactions2 as $transaction2)
                                 <tr>
-                                    @if ($transaction2->sendstatus == 'ENV')
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>ID:</b>
+                                    @if ($transaction2->credit == 'Y')
+                                        @if ($transaction2->sendstatus == 'ENV')
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>ID:</b>
+                                                    </div>
+                                                    <div class="text-danger">
+                                                        <b>{{ $transaction2->id }}</b>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <b>{{ $transaction2->id }}</b>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Aliado o Usuario:</b>
+                                                    </div>
+                                                    <div class="text-danger">
+                                                        <b>{{ $transaction2->comercial_name }}</b>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>Aliado o Usuario:</b>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Conversión:</b>
+                                                    </div>
+                                                    <div class="text-danger">
+                                                        <b>{{ $transaction2->a_to_b }}</b>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <b>{{ $transaction2->comercial_name }}</b>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Monto a transferir:</b>
+                                                    </div>
+                                                    <div class="text-danger">
+                                                        <b>{{ trim($transaction2->mount_change_fm) }}{{$transaction2->symbol2}} {{$transaction2->currency2}}</b>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>Conversión:</b>
+                                            </td>
+                                            <input type="hidden" id="nombre{{ $transaction2->id }}"
+                                                        value="{{ $transaction2->complete_description }}">
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Estatus:</b>
+                                                    </div>
+                                                        @switch($transaction2->sendstatus)
+                                                            @case('ENV')
+                                                                <div class="text-primary">
+                                                                @break
+                                                            @case('REC')
+                                                                <div class="text-orange">
+                                                                @break
+                                                            @case('PRO')
+                                                                <div class="text-cyan">
+                                                                @break
+                                                            @case('TRA')
+                                                                <div class="text-danger">
+                                                                @break
+                                                        @endswitch
+                                                        <b><i class="fas fa-traffic-light"></i> {{ $transaction2->sendstatus_text }}</b></div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <b>{{ $transaction2->a_to_b }}</b>
+                                            </td>
+                                        @else
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>ID:</b>
+                                                    </div>
+                                                    <div class="text-danger">
+                                                        {{ $transaction2->id }}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>Descripción:</b>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Aliado o Usuario:</b>
+                                                    </div>
+                                                    <div class="text-danger">
+                                                        {{ $transaction2->comercial_name }}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <b>{{ $transaction2->complete_description }}</b>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Conversión:</b>
+                                                    </div>
+                                                    <div class="text-danger">
+                                                        {{ $transaction2->a_to_b }}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <input type="hidden" id="nombre{{ $transaction2->id }}"
-                                                    value="{{ $transaction2->complete_description }}">
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>Estatus:</b>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Monto a transferir:</b>
+                                                    </div>
+                                                    <div class="text-danger">
+                                                        {{ trim($transaction2->mount_change_fm) }}{{$transaction2->symbol2}} {{$transaction2->currency2}}
+                                                    </div>
                                                 </div>
-                                                    @switch($transaction2->sendstatus)
-                                                        @case('ENV')
-                                                            <div class="text-primary">
-                                                            @break
-                                                        @case('REC')
-                                                            <div class="text-orange">
-                                                            @break
-                                                        @case('PRO')
-                                                            <div class="text-cyan">
-                                                            @break
-                                                        @case('TRA')
-                                                            <div class="text-danger">
-                                                            @break
-                                                    @endswitch
-                                                    <b><i class="fas fa-traffic-light"></i> {{ $transaction2->sendstatus_text }}</b></div>
+                                            </td>
+                                            <input type="hidden" id="nombre{{ $transaction2->id }}"
+                                                        value="{{ $transaction2->complete_description }}">
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Estatus:</b>
+                                                    </div>
+                                                        @switch($transaction2->sendstatus)
+                                                            @case('ENV')
+                                                                <div class="text-primary">
+                                                                @break
+                                                            @case('REC')
+                                                                <div class="text-orange">
+                                                                @break
+                                                            @case('PRO')
+                                                                <div class="text-cyan">
+                                                                @break
+                                                            @case('TRA')
+                                                                <div class="text-danger">
+                                                                @break
+                                                        @endswitch
+                                                        <i class="fas fa-traffic-light"></i> {{ $transaction2->sendstatus_text }}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
+                                            </td>
+                                        @endif
                                     @else
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>ID:</b>
+                                        @if ($transaction2->sendstatus == 'ENV')
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>ID:</b>
+                                                    </div>
+                                                    <div>
+                                                        <b>{{ $transaction2->id }}</b>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    {{ $transaction2->id }}
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Aliado o Usuario:</b>
+                                                    </div>
+                                                    <div>
+                                                        <b>{{ $transaction2->comercial_name }}</b>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>Aliado o Usuario:</b>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Conversión:</b>
+                                                    </div>
+                                                    <div>
+                                                        <b>{{ $transaction2->a_to_b }}</b>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    {{ $transaction2->comercial_name }}
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Monto a transferir:</b>
+                                                    </div>
+                                                    <div>
+                                                        <b>{{ trim($transaction2->mount_change_fm) }}{{$transaction2->symbol2}} {{$transaction2->currency2}}</b>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>Conversión:</b>
+                                            </td>
+                                            <input type="hidden" id="nombre{{ $transaction2->id }}"
+                                                        value="{{ $transaction2->complete_description }}">
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Estatus:</b>
+                                                    </div>
+                                                        @switch($transaction2->sendstatus)
+                                                            @case('ENV')
+                                                                <div class="text-primary">
+                                                                @break
+                                                            @case('REC')
+                                                                <div class="text-orange">
+                                                                @break
+                                                            @case('PRO')
+                                                                <div class="text-cyan">
+                                                                @break
+                                                            @case('TRA')
+                                                                <div class="text-danger">
+                                                                @break
+                                                        @endswitch
+                                                        <b><i class="fas fa-traffic-light"></i> {{ $transaction2->sendstatus_text }}</b></div>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    {{ $transaction2->a_to_b }}
+                                            </td>
+                                        @else
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>ID:</b>
+                                                    </div>
+                                                    <div>
+                                                        {{ $transaction2->id }}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>Descripción:</b>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Aliado o Usuario:</b>
+                                                    </div>
+                                                    <div>
+                                                        {{ $transaction2->comercial_name }}
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    {{ $transaction2->complete_description }}
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Conversión:</b>
+                                                    </div>
+                                                    <div>
+                                                        {{ $transaction2->a_to_b }}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
-                                        <input type="hidden" id="nombre{{ $transaction2->id }}"
-                                                    value="{{ $transaction2->complete_description }}">
-                                        <td>
-                                            <div class="row">
-                                                <div>
-                                                    <b>Estatus:</b>
+                                            </td>
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Monto a transferir:</b>
+                                                    </div>
+                                                    <div>
+                                                        {{ trim($transaction2->mount_change_fm) }}{{$transaction2->symbol2}} {{$transaction2->currency2}}
+                                                    </div>
                                                 </div>
-                                                    @switch($transaction2->sendstatus)
-                                                        @case('ENV')
-                                                            <div class="text-primary">
-                                                            @break
-                                                        @case('REC')
-                                                            <div class="text-orange">
-                                                            @break
-                                                        @case('PRO')
-                                                            <div class="text-cyan">
-                                                            @break
-                                                        @case('TRA')
-                                                            <div class="text-danger">
-                                                            @break
-                                                    @endswitch
-                                                    <i class="fas fa-traffic-light"></i> {{ $transaction2->sendstatus_text }}</div>
+                                            </td>
+                                            <input type="hidden" id="nombre{{ $transaction2->id }}"
+                                                        value="{{ $transaction2->complete_description }}">
+                                            <td>
+                                                <div class="row">
+                                                    <div>
+                                                        <b>Estatus:</b>
+                                                    </div>
+                                                        @switch($transaction2->sendstatus)
+                                                            @case('ENV')
+                                                                <div class="text-primary">
+                                                                @break
+                                                            @case('REC')
+                                                                <div class="text-orange">
+                                                                @break
+                                                            @case('PRO')
+                                                                <div class="text-cyan">
+                                                                @break
+                                                            @case('TRA')
+                                                                <div class="text-danger">
+                                                                @break
+                                                        @endswitch
+                                                        <i class="fas fa-traffic-light"></i> {{ $transaction2->sendstatus_text }}</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </td>
+                                            </td>
+                                        @endif
                                     @endif
                                     <td>
                                         @if ($permissions > 0)
@@ -286,7 +470,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 

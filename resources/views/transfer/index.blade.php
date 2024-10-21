@@ -31,6 +31,7 @@
 <form action="/transfer" method="POST" id="view" name="view" class="formeli">
     @csrf
     <input type="hidden" id="transfer_id" name="transfer_id" value="">
+    <input type="hidden" id="transaction_id" name="transaction_id" value="">
     <input type="hidden" id="type_screen" name="type_screen" value="">
     <input type="hidden" id="payer_cellphone" name="payer_cellphone" value="{{$payer_cellphone}}">
     <input type="hidden" id="user_cellphone" name="user_cellphone" value="{{$user_cellphone}}">
@@ -52,8 +53,8 @@
                                 <tr>
                                     <th class="text-center">ID</th>
                                     <th class="text-center">Aliado o Usuario</th>
-                                    <th class="text-center">Conversión a puta</th>
-                                    <th class="text-center">Descripción</th>
+                                    <th class="text-center">Conversión</th>
+                                    <th width="160" class="text-center">Monto transferido</th>
                                     <th class="text-center">Terminar</th>
                                 </tr>
                             </thead>
@@ -63,7 +64,7 @@
                                         <td class="text-left">{{ $transfer->id }}</td>
                                         <td class="text-left">{{ $transfer->comercial_name }}</td>
                                         <td class="text-left">{{ $transfer->a_to_b }}</td>
-                                        <td class="text-left">{{ $transfer->complete_description }}</td>
+                                        <td width="160" class="text-right">{{ trim($transfer->mount_change_fm) }}{{$transfer->symbol2}} {{$transfer->currency2}}</td>
                                         <input type="hidden" id="nombre{{ $transfer->id }}"
                                             value="{{ $transfer->complete_description }}">
                                            <td class="text-center">
@@ -154,7 +155,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 
@@ -239,7 +240,7 @@
         var nombre = '"'+document.getElementById(identificador).value+'"';
         document.getElementById('nombrelimina').value = nombre;
         document.getElementById('toaction').value = xaccion;
-        document.getElementById('transfer_id').value = xid;
+        document.getElementById('transaction_id').value = xid;
 
         if (xaccion == "delete") {
             $('.formeli').submit(function(e) {

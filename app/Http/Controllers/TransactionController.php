@@ -3,16 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bank;
+use App\Models\Buy;
+use App\Models\Credit;
 use App\Models\Document;
 use App\Models\Transaction;
 use App\Models\Transfer;
+use App\Models\TransferBuy;
 use App\Models\V_transfer;
+use App\Models\V_admtransfers;
 use App\Models\V_transaction;
 use App\Models\Payer;
 use App\Models\TypeDoc;
 use App\Models\V_document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class TransactionController extends Controller
@@ -38,6 +43,10 @@ class TransactionController extends Controller
             case 4:
                 $menu_name = 'REPORTES E INDICADORES';
                 $menupopup_name = 'Movimientos';
+                break;
+            case 5:
+                $menu_name = 'PROCESOS';
+                $menupopup_name = 'En proceso';
                 break;
         }
 
@@ -78,6 +87,9 @@ class TransactionController extends Controller
     {
         $puser_id = auth()->user()->id;
         $prole = auth()->user()->role;
+        $credit = auth()->user()->credit;
+        $credit_limit = auth()->user()->credit_limit;
+
         switch ($prole) {
             case 'ADM':
                 session(['submenupopup_id' => 29]);
@@ -98,6 +110,14 @@ class TransactionController extends Controller
 
         $sql = "SELECT * FROM v_documents where user_id = ".$puser_id." and favorite = 'Y' and rowstatus = 'ACT'";
         $documents = DB::select($sql);
+
+        $sql = "SELECT coalesce(sum(total_debt), 0) as total_debt FROM v_credits where user_id = ".$puser_id." and creditstatus = 'PEN' and rowstatus = 'ACT'";
+        $totalcredits = DB::select($sql);
+        if (!empty($totalcredits) && count($totalcredits) > 0){
+            $total_debt = $totalcredits[0]->total_debt;
+        } else {
+            $total_debt = 0.00;
+        }
 
         $sql = "SELECT countryname||' ('||phone_code||')' as country,phone_code FROM countries where rowstatus = 'ACT'";
         $country_phone = DB::select($sql);
@@ -121,7 +141,7 @@ class TransactionController extends Controller
                 'transactions2', 'message', 'payer_cellphone', 'user_cellphone', 'message2'));
                 break;
             case 'ALI':
-                return view('transaction.new', compact('conversions', 'permissions', 'documents', 'country_phone'));
+                return view('transaction.new', compact('conversions', 'permissions', 'documents', 'country_phone', 'credit', 'credit_limit', 'total_debt'));
                 break;
             case 'USU':
                 $sql = "SELECT * FROM payers where user_id = ".$puser_id." and rowstatus = 'ACT'";
@@ -137,7 +157,8 @@ class TransactionController extends Controller
                 $onlycellphone = str_replace($phone_code, '', $cellphone);
 
                 return view('transaction.new_usu', compact('conversions', 'permissions',
-                'documents', 'country_phone', 'payer_id','payer_name', 'phone_code','onlycellphone'));
+                'documents', 'country_phone', 'payer_id','payer_name', 'phone_code','onlycellphone',
+                'credit', 'credit_limit', 'total_debt'));
                 break;
         }
     }
@@ -161,6 +182,7 @@ class TransactionController extends Controller
             case 'new':
                 $pid = auth()->user()->id;
                 $prole = auth()->user()->role;
+                $credit = auth()->user()->credit;
 
                 $document_id = request('document_id');
 
@@ -196,13 +218,27 @@ class TransactionController extends Controller
                 $Transaction->mount_value = request('real_mount_value');
                 $Transaction->mount_change = request('mount_change2');
                 $Transaction->mount_reference = request('mount_reference2');
+                $Transaction->amount_withheld = request('real_amount_withheld');
+                $Transaction->net_amount = request('net_amount2');
                 $Transaction->canawilbank_id = request('canawilbank_id');
-                $Transaction->waytopay_id = request('waytopay_id');
-                $Transaction->waytopay_reference = request('waytopay_reference') ?? '';
 
                 $Transaction->save();
 
                 $transaction_id = $Transaction->id;
+
+                if ($credit == 'Y'){
+                    $creditcash = request('credit_value');
+                    if ($creditcash == 'N'){
+                        $Credit = new Credit();
+
+                        $Credit->transaction_id = $transaction_id;
+                        $Credit->total_debt = request('net_amount2');
+
+                        $Credit->save();
+                    }
+                } else {
+                    $creditcash = 'Y';
+                }
 
                 $permissions = $this->permissions(1);
 
@@ -217,33 +253,62 @@ class TransactionController extends Controller
 
                 $type_screen = request('type_screen');
 
-                return view('transaction.photo', compact('transaction_id'));
+                if($type_screen == 'W'){
+                    return view('transaction.photoweb', compact('transaction_id', 'credit', 'creditcash'));
+                } else {
+                    return view('transaction.photo', compact('transaction_id', 'credit', 'creditcash'));
+                }
                 break;
             case 'photo':
                 $transaction_id = request('transaction_id');
+                $credit = request('credit');
+                $creditcash = request('creditcash');
 
-                if ($request->hasFile('fileInput')) {
-                    // Obtener el archivo subido
-                    $file = $request->file('fileInput');
+                $tienefoto = 'N';
+                if ($credit == 'N'){
+                    $tienefoto = 'Y';
+                } else {
+                    if ($creditcash = 'Y'){
+                        $tienefoto = 'Y';
+                    }
+                }
 
-                    // Obtener la extensión del archivo
-                    $extension = $file->extension();
+                if ($tienefoto == 'Y'){
+                    if ($request->hasFile('fileInput')) {
+                        // Obtener el archivo subido
+                        $file = $request->file('fileInput');
 
-                    $filename = '/storage/images/transactions/Image'.$transaction_id.'.'.$extension;
+                        // Obtener la extensión del archivo
+                        $extension = $file->extension();
+
+                        $filename = '/storage/images/transactions/Image'.$transaction_id.'.'.$extension;
+
+                        $Transaction = Transaction::find($transaction_id);
+
+                        $Transaction->bank_image = $filename;
+                        $Transaction->image_orientation = request('orientation');
+                        $Transaction->sendstatus = 'ENV';
+
+                        $Transaction->save();
+
+                        $request->file('fileInput')->storeAs('/public/images/transactions/Image'.$transaction_id.'.'.$extension);
+                    }
+                } else {
+                    $filename = '/storage/images/transactions/credit_transaction.png';
 
                     $Transaction = Transaction::find($transaction_id);
 
                     $Transaction->bank_image = $filename;
-                    $Transaction->image_orientation = request('orientation');
+                    $Transaction->image_orientation = 'HOR';
                     $Transaction->sendstatus = 'ENV';
 
                     $Transaction->save();
-
-                    $request->file('fileInput')->storeAs('/public/images/transactions/Image'.$transaction_id.'.'.$extension);
                 }
 
                 $pid = auth()->user()->id;
                 $prole = auth()->user()->role;
+                $credit = auth()->user()->credit;
+                $credit_limit = auth()->user()->credit_limit;
 
                 $permissions = $this->permissions(1);
 
@@ -253,13 +318,21 @@ class TransactionController extends Controller
                 $sql = "SELECT * FROM v_documents where user_id = ".$pid." and favorite = 'Y' and rowstatus = 'ACT'";
                 $documents = DB::select($sql);
 
+                $sql = "SELECT coalesce(sum(total_debt), 0) as total_debt FROM v_credits where user_id = ".$pid." and creditstatus = 'PEN' and rowstatus = 'ACT'";
+                $totalcredits = DB::select($sql);
+                if (!empty($totalcredits) && count($totalcredits) > 0){
+                    $total_debt = $totalcredits[0]->total_debt;
+                } else {
+                    $total_debt = 0.00;
+                }
+
                 $sql = "SELECT countryname||' ('||phone_code||')' as country,phone_code FROM countries where rowstatus = 'ACT'";
                 $country_phone = DB::select($sql);
 
                 switch ($prole) {
                     case 'ALI':
                         session(['menupopup_id' => 14]);
-                        return view('transaction.new', compact('conversions', 'permissions', 'documents', 'country_phone'));
+                        return view('transaction.new', compact('conversions', 'permissions', 'documents', 'country_phone', 'credit', 'credit_limit', 'total_debt'));
                         break;
                     case 'USU':
                         session(['menupopup_id' => 21]);
@@ -276,13 +349,238 @@ class TransactionController extends Controller
 
                         $onlycellphone = str_replace($phone_code, '', $cellphone);
                         return view('transaction.new_usu', compact('conversions', 'permissions',
-                        'documents', 'country_phone', 'payer_id','payer_name', 'phone_code','onlycellphone'));
+                        'documents', 'country_phone', 'payer_id','payer_name', 'phone_code','onlycellphone',
+                        'credit', 'credit_limit', 'total_debt'));
                         break;
                 }
                 break;
+            case 'creditphoto':
+                $transaction_id = request('transaction_id');
+
+                $filename = '/storage/images/transactions/credit_transaction2.png';
+
+                $Transaction = Transaction::find($transaction_id);
+
+                $Transaction->bank_image = $filename;
+                $Transaction->image_orientation = 'VER';
+                $Transaction->sendstatus = 'ENV';
+
+                $Transaction->save();
+
+                $pid = auth()->user()->id;
+                $prole = auth()->user()->role;
+                $credit = auth()->user()->credit;
+                $credit_limit = auth()->user()->credit_limit;
+
+                $permissions = $this->permissions(1);
+
+                $sql = "SELECT * FROM v_conversions where typeuser = '".$prole."' and rowstatus = 'ACT'";
+                $conversions = DB::select($sql);
+
+                $sql = "SELECT * FROM v_documents where user_id = ".$pid." and favorite = 'Y' and rowstatus = 'ACT'";
+                $documents = DB::select($sql);
+
+                $sql = "SELECT coalesce(sum(total_debt), 0) as total_debt FROM v_credits where user_id = ".$pid." and creditstatus = 'PEN' and rowstatus = 'ACT'";
+                $totalcredits = DB::select($sql);
+                if (!empty($totalcredits) && count($totalcredits) > 0){
+                    $total_debt = $totalcredits[0]->total_debt;
+                } else {
+                    $total_debt = 0.00;
+                }
+
+                $sql = "SELECT countryname||' ('||phone_code||')' as country,phone_code FROM countries where rowstatus = 'ACT'";
+                $country_phone = DB::select($sql);
+
+                switch ($prole) {
+                    case 'ALI':
+                        session(['menupopup_id' => 14]);
+                        return view('transaction.new', compact('conversions', 'permissions', 'documents', 'country_phone', 'credit', 'credit_limit', 'total_debt'));
+                        break;
+                    case 'USU':
+                        session(['menupopup_id' => 21]);
+
+                        $sql = "SELECT * FROM payers where user_id = ".$pid." and rowstatus = 'ACT'";
+                        $payers = DB::select($sql);
+                        $payer_id = $payers[0]->id;
+                        $payer_name = $payers[0]->payer_name;
+                        $cellphone = $payers[0]->cellphone;
+
+                        $sql = "SELECT phone_code FROM countries WHERE '".$cellphone."' LIKE phone_code || '%'";
+                        $phonecode = DB::select($sql);
+                        $phone_code = $phonecode[0]->phone_code;
+
+                        $onlycellphone = str_replace($phone_code, '', $cellphone);
+                        return view('transaction.new_usu', compact('conversions', 'permissions',
+                        'documents', 'country_phone', 'payer_id','payer_name', 'phone_code','onlycellphone',
+                        'credit', 'credit_limit', 'total_debt'));
+                        break;
+                }
+                break;
+            case 'photoweb':
+                $transaction_id = request('transaction_id');
+                $credit = request('credit');
+                $creditcash = request('creditcash');
+
+                $tienefoto = 'N';
+                if ($credit == 'N'){
+                    $tienefoto = 'Y';
+                } else {
+                    if ($creditcash == 'Y'){
+                        $tienefoto = 'Y';
+                    }
+                }
+
+                if ($tienefoto == 'Y'){
+                    if ($request->has('imageData')){
+                        // Obtener el dato de la imagen
+                        $imageData  = $request->input('imageData');
+
+                        // Decodificar la imagen base64 (remover la parte inicial de la cadena de base64)
+                        $imageParts = explode(";base64,", $imageData);
+                        $imageTypeAux = explode("image/", $imageParts[0]);
+                        $imageType = $imageTypeAux[1]; // Obtener la extensión (png, jpg, etc.)
+                        $imageBase64 = base64_decode($imageParts[1]);
+
+                        $filename = '/storage/images/transactions/Image'.$transaction_id.'.'.$imageType;
+
+                        // Guardar la imagen en el almacenamiento
+                        Storage::put('public/images/transactions/Image'.$transaction_id.'.'.$imageType, $imageBase64);
+
+                        $Transaction = Transaction::find($transaction_id);
+
+                        $Transaction->bank_image = $filename;
+                        $Transaction->image_orientation = request('orientation');
+                        $Transaction->sendstatus = 'ENV';
+
+                        $Transaction->save();
+                    }
+                } else {
+                    $filename = '/storage/images/transactions/credit_transaction.png';
+
+                    $Transaction = Transaction::find($transaction_id);
+
+                    $Transaction->bank_image = $filename;
+                    $Transaction->image_orientation = 'HOR';
+                    $Transaction->sendstatus = 'ENV';
+
+                    $Transaction->save();
+                }
+
+                $pid = auth()->user()->id;
+                $prole = auth()->user()->role;
+                $credit = auth()->user()->credit;
+                $credit_limit = auth()->user()->credit_limit;
+
+                $permissions = $this->permissions(1);
+
+                $sql = "SELECT * FROM v_conversions where typeuser = '".$prole."' and rowstatus = 'ACT'";
+                $conversions = DB::select($sql);
+
+                $sql = "SELECT * FROM v_documents where user_id = ".$pid." and favorite = 'Y' and rowstatus = 'ACT'";
+                $documents = DB::select($sql);
+
+                $sql = "SELECT coalesce(sum(total_debt), 0) as total_debt FROM v_credits where user_id = ".$pid." and creditstatus = 'PEN' and rowstatus = 'ACT'";
+                $totalcredits = DB::select($sql);
+                if (!empty($totalcredits) && count($totalcredits) > 0){
+                    $total_debt = $totalcredits[0]->total_debt;
+                } else {
+                    $total_debt = 0.00;
+                }
+
+                $sql = "SELECT countryname||' ('||phone_code||')' as country,phone_code FROM countries where rowstatus = 'ACT'";
+                $country_phone = DB::select($sql);
+
+                switch ($prole) {
+                    case 'ALI':
+                        session(['menupopup_id' => 14]);
+                        return view('transaction.new', compact('conversions', 'permissions', 'documents', 'country_phone', 'credit', 'credit_limit', 'total_debt'));
+                        break;
+                    case 'USU':
+                        session(['menupopup_id' => 21]);
+
+                        $sql = "SELECT * FROM payers where user_id = ".$pid." and rowstatus = 'ACT'";
+                        $payers = DB::select($sql);
+                        $payer_id = $payers[0]->id;
+                        $payer_name = $payers[0]->payer_name;
+                        $cellphone = $payers[0]->cellphone;
+
+                        $sql = "SELECT phone_code FROM countries WHERE '".$cellphone."' LIKE phone_code || '%'";
+                        $phonecode = DB::select($sql);
+                        $phone_code = $phonecode[0]->phone_code;
+
+                        $onlycellphone = str_replace($phone_code, '', $cellphone);
+                        return view('transaction.new_usu', compact('conversions', 'permissions',
+                        'documents', 'country_phone', 'payer_id','payer_name', 'phone_code','onlycellphone',
+                        'credit', 'credit_limit', 'total_debt'));
+                        break;
+                }
+                break;
+            case 'creditphotoweb':
+                    $transaction_id = request('transaction_id');
+
+                    $filename = '/storage/images/transactions/credit_transaction.png';
+
+                    $Transaction = Transaction::find($transaction_id);
+
+                    $Transaction->bank_image = $filename;
+                    $Transaction->image_orientation = 'HOR';
+                    $Transaction->sendstatus = 'ENV';
+
+                    $Transaction->save();
+
+                    $pid = auth()->user()->id;
+                    $prole = auth()->user()->role;
+                    $credit = auth()->user()->credit;
+                    $credit_limit = auth()->user()->credit_limit;
+
+                    $permissions = $this->permissions(1);
+
+                    $sql = "SELECT * FROM v_conversions where typeuser = '".$prole."' and rowstatus = 'ACT'";
+                    $conversions = DB::select($sql);
+
+                    $sql = "SELECT * FROM v_documents where user_id = ".$pid." and favorite = 'Y' and rowstatus = 'ACT'";
+                    $documents = DB::select($sql);
+
+                    $sql = "SELECT coalesce(sum(total_debt), 0) as total_debt FROM v_credits where user_id = ".$pid." and creditstatus = 'PEN' and rowstatus = 'ACT'";
+                    $totalcredits = DB::select($sql);
+                    if (!empty($totalcredits) && count($totalcredits) > 0){
+                        $total_debt = $totalcredits[0]->total_debt;
+                    } else {
+                        $total_debt = 0.00;
+                    }
+
+                    $sql = "SELECT countryname||' ('||phone_code||')' as country,phone_code FROM countries where rowstatus = 'ACT'";
+                    $country_phone = DB::select($sql);
+
+                    switch ($prole) {
+                        case 'ALI':
+                            session(['menupopup_id' => 14]);
+                            return view('transaction.new', compact('conversions', 'permissions', 'documents', 'country_phone', 'credit', 'credit_limit', 'total_debt'));
+                            break;
+                        case 'USU':
+                            session(['menupopup_id' => 21]);
+
+                            $sql = "SELECT * FROM payers where user_id = ".$pid." and rowstatus = 'ACT'";
+                            $payers = DB::select($sql);
+                            $payer_id = $payers[0]->id;
+                            $payer_name = $payers[0]->payer_name;
+                            $cellphone = $payers[0]->cellphone;
+
+                            $sql = "SELECT phone_code FROM countries WHERE '".$cellphone."' LIKE phone_code || '%'";
+                            $phonecode = DB::select($sql);
+                            $phone_code = $phonecode[0]->phone_code;
+
+                            $onlycellphone = str_replace($phone_code, '', $cellphone);
+                            return view('transaction.new_usu', compact('conversions', 'permissions',
+                            'documents', 'country_phone', 'payer_id','payer_name', 'phone_code','onlycellphone',
+                            'credit', 'credit_limit', 'total_debt'));
+                            break;
+                    }
+                    break;
             case 'new_usu':
                 $pid = auth()->user()->id;
                 $prole = auth()->user()->role;
+                $credit = auth()->user()->credit;
 
                 $document_id = request('document_id');
                 $payer_id = request('payer_id');
@@ -302,13 +600,27 @@ class TransactionController extends Controller
                 $Transaction->mount_value = request('real_mount_value');
                 $Transaction->mount_change = request('mount_change2');
                 $Transaction->mount_reference = request('mount_reference2');
+                $Transaction->amount_withheld = request('real_amount_withheld');
+                $Transaction->net_amount = request('net_amount2');
                 $Transaction->canawilbank_id = request('canawilbank_id');
-                $Transaction->waytopay_id = request('waytopay_id');
-                $Transaction->waytopay_reference = request('waytopay_reference') ?? '';
 
                 $Transaction->save();
 
                 $transaction_id = $Transaction->id;
+
+                if ($credit == 'Y'){
+                    $creditcash = request('credit_value');
+                    if ($creditcash == 'N'){
+                        $Credit = new Credit();
+
+                        $Credit->transaction_id = $transaction_id;
+                        $Credit->total_debt = request('net_amount2');
+
+                        $Credit->save();
+                    }
+                } else {
+                    $creditcash = 'Y';
+                }
 
                 $permissions = $this->permissions(3);
 
@@ -323,7 +635,11 @@ class TransactionController extends Controller
 
                 $type_screen = request('type_screen');
 
-                return view('transaction.photo', compact('transaction_id'));
+                if($type_screen == 'W'){
+                    return view('transaction.photoweb', compact('transaction_id', 'credit', 'creditcash'));
+                } else {
+                    return view('transaction.photo', compact('transaction_id', 'credit', 'creditcash'));
+                }
                 break;
             case 'transfer':
                 $transaction_id = $request->transaction_id;
@@ -334,17 +650,14 @@ class TransactionController extends Controller
 
                 $Transaction->save();
 
-                $country_id = auth()->user()->country_id;
-
-                $sql = "SELECT * FROM canawil_banks where country_id = ".$country_id." and rowstatus = 'ACT'";
-                $canawil_banks = DB::select($sql);
-
-                $sql = "SELECT * FROM way_to_pays where country_id = ".$country_id." and rowstatus = 'ACT'";
-                $way_to_pays = DB::select($sql);
-
                 $sql = "SELECT * FROM v_transactions where id = ".$transaction_id." and rowstatus = 'ACT'";
                 $transactions = DB::select($sql);
                 $cellphone = $transactions[0]->cellphone;
+                $country_id = $transactions[0]->country2_id;
+                $mount_change = $transactions[0]->mount_change;
+
+                $sql = "SELECT * FROM v_currency_banks where country_id = ".$country_id." and rowstatus = 'ACT'";
+                $currency_banks = DB::select($sql);
 
                 $sql = "SELECT phone_code FROM countries WHERE '".$cellphone."' LIKE phone_code || '%'";
                 $phonecode = DB::select($sql);
@@ -352,44 +665,264 @@ class TransactionController extends Controller
 
                 $onlycellphone = str_replace($phone_code, '', $cellphone);
 
-                return view('transaction.transfer', compact('transactions', 'phone_code',
-                'onlycellphone', 'canawil_banks', 'way_to_pays'));
-                break;
-            case 'save_transfer':
-                $prole = auth()->user()->role;
+                $sql = "SELECT * FROM v_transfers where transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
+                $transfers = DB::select($sql);
 
+                $sql = "SELECT sum(amount) as amount FROM v_transferbuys where transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
+                $transferbuys = DB::select($sql);
+
+                $amount_rest = 0;
+                foreach($transferbuys as $row3){
+                    $amount_rest = $row3->amount;
+                }
+
+                $sumamount_rest = $mount_change - $amount_rest;
+
+                $origin = 'transaction';
+
+                return view('transaction.transfer', compact('transactions', 'phone_code', 'origin',
+                'onlycellphone', 'currency_banks', 'transfers', 'amount_rest', 'sumamount_rest'));
+                break;
+            case 'save_transfer_web':
                 $transaction_id = $request->transaction_id;
-                $payer_cellphone = $request->payer_cellphone;
+                $amount_rest = $request->amount_rest;
+                $real_mount_change = $request->real_mount_change;
+                $real_amount = $request->real_amount;
+
+                $defamount = $real_amount + $amount_rest;
+
+                if ($real_mount_change > $defamount){
+                    $sendstatus = 'PRO';
+                } else {
+                    $sendstatus = 'TRA';
+                }
 
                 $Transaction = Transaction::find($transaction_id);
 
-                $Transaction->sendstatus = 'PRO';
+                $Transaction->sendstatus = $sendstatus;
 
                 $Transaction->save();
 
-                $Transfer = new Transfer();
+                if ($request->has('imageData')){
+                    $sql = "select max(id) as id from transfers where rowstatus = 'ACT'";
+                    $transfersid = DB::select($sql);
 
-                $Transfer->transaction_id = $transaction_id;
-                $Transfer->canawilbank_id = request('canawilbank_id');
-                $Transfer->waytopay_id = request('waytopay_id');
-                $Transfer->waytopay_id = request('waytopay_id');
-                $Transfer->waytopay_reference = request('waytopay_reference') ?? '';
+                    $newtransfer_id = 0;
+                    foreach ($transfersid as $row){
+                        $newtransfer_id = $row->id;
+                    }
+                    $newtransfer_id++;
 
-                $Transfer->save();
+                    // Obtener el dato de la imagen
+                    $imageData  = $request->input('imageData');
 
-                $transfer_id = $Transfer->id;
+                    // Decodificar la imagen base64 (remover la parte inicial de la cadena de base64)
+                    $imageParts = explode(";base64,", $imageData);
+                    $imageTypeAux = explode("image/", $imageParts[0]);
+                    $imageType = $imageTypeAux[1]; // Obtener la extensión (png, jpg, etc.)
+                    $imageBase64 = base64_decode($imageParts[1]);
 
-                $type_screen = request('type_screen');
+                    $filename = '/storage/images/transfer/Image'.$newtransfer_id.'.'.$imageType;
 
-                $prole = auth()->user()->role;
-                switch ($prole) {
-                    case 'ADM':
-                        session(['menupopup_id' => 20]);
-                        break;
+                    // Guardar la imagen en el almacenamiento
+                    Storage::put('public/images/transfer/Image'.$newtransfer_id.'.'.$imageType, $imageBase64);
+
+                    $Transfer = new Transfer();
+
+                    $Transfer->transaction_id = $transaction_id;
+                    $Transfer->currencybank_id = request('currencybank_id');
+                    $Transfer->bank_image = $filename;
+                    $Transfer->image_orientation = request('orientation');
+                    $Transfer->amount = $real_amount;
+                    $Transfer->transfer_date = Carbon::now();
+
+                    $Transfer->save();
+
+                    $transfer_id = $Transfer->id;
+
+                    $flag = true;
+
+                    while ($flag) {
+                        $currencybank_id = request('currencybank_id');
+                        $sql = "select id, available_amount from buys where currencybank_id=".$currencybank_id."";
+                        $buys = DB::select($sql);
+
+                        $lastKey = end($buys)->id;
+
+                        foreach ($buys as $row2) {
+                            $available_amount = $row2->available_amount;
+                            $buy_id = $row2->id;
+                            if ($available_amount > 0){
+                                if ($available_amount > $real_amount){
+                                    $netamount = $available_amount - $real_amount;
+
+                                    $TransferBuy = new TransferBuy();
+
+                                    $TransferBuy->transfer_id = $transfer_id;
+                                    $TransferBuy->buy_id = $buy_id;
+                                    $TransferBuy->amount = $real_amount;
+
+                                    $TransferBuy->save();
+
+                                    $Buy = Buy::find($buy_id);
+
+                                    $Buy->available_amount = $netamount;
+
+                                    $Buy->save();
+
+                                    $flag = false; // Cambiamos el flag para salir del ciclo
+                                } else {
+                                    $TransferBuy = new TransferBuy();
+
+                                    $TransferBuy->transfer_id = $transfer_id;
+                                    $TransferBuy->buy_id = $buy_id;
+                                    $TransferBuy->amount = $available_amount;
+
+                                    $TransferBuy->save();
+
+                                    $Buy = Buy::find($buy_id);
+
+                                    $Buy->available_amount = 0.00;
+
+                                    $Buy->save();
+
+                                    $real_amount = $real_amount - $available_amount;
+                                }
+                            } else {
+                                if ($buy_id == $lastKey) {
+                                    $flag = false; // es el ultimo registro
+                                }
+                            }
+                        }
+                    }
                 }
 
-                return view('transaction.photo_trans', compact('transaction_id', 'transfer_id',
-                        'payer_cellphone'));
+                if ($sendstatus == 'PRO'){
+                    $sql = "SELECT * FROM v_transactions where id = ".$transaction_id." and rowstatus = 'ACT'";
+                    $transactions = DB::select($sql);
+                    $cellphone = $transactions[0]->cellphone;
+                    $country_id = $transactions[0]->country2_id;
+                    $mount_change = $transactions[0]->mount_change;
+
+                    $sql = "SELECT * FROM v_currency_banks where country_id = ".$country_id." and rowstatus = 'ACT'";
+                    $currency_banks = DB::select($sql);
+
+                    $sql = "SELECT phone_code FROM countries WHERE '".$cellphone."' LIKE phone_code || '%'";
+                    $phonecode = DB::select($sql);
+                    $phone_code = $phonecode[0]->phone_code;
+
+                    $onlycellphone = str_replace($phone_code, '', $cellphone);
+
+                    $sql = "SELECT * FROM v_transfers where transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
+                    $transfers = DB::select($sql);
+
+                    $sql = "SELECT sum(amount) as amount FROM v_transferbuys where transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
+                    $transferbuys = DB::select($sql);
+
+                    $amount_rest = 0;
+                    foreach($transferbuys as $row3){
+                        $amount_rest = $row3->amount;
+                    }
+
+                    $sumamount_rest = $mount_change - $amount_rest;
+
+                    $origin = 'transaction';
+
+                    return view('transaction.transfer', compact('transactions', 'phone_code', 'origin',
+                    'onlycellphone', 'currency_banks', 'transfers', 'amount_rest', 'sumamount_rest'));
+                } else {
+                    $sql = "SELECT * FROM v_transactions where id = ".$transaction_id." and rowstatus = 'ACT'";
+                    $transaction = DB::select($sql);
+
+                    $comercial_name = $transaction[0]->comercial_name;
+                    $payer_name = $transaction[0]->payer_name;
+                    $payer_cellphone = $transaction[0]->cellphone;
+                    $formatted_date = Carbon::now()->format('d-m-Y');
+                    $a_to_b = $transaction[0]->a_to_b;
+                    $mount_value_fm = trim($transaction[0]->mount_value_fm);
+                    $symbol = $transaction[0]->symbol;
+                    $currency = $transaction[0]->currency;
+                    $role = $transaction[0]->role;
+                    $conversion_value = $transaction[0]->conversion_value;
+                    $formatted_value = number_format($conversion_value, 2);
+                    $user_cellphone = $transaction[0]->user_cellphone;
+                    $currency2 = $transaction[0]->currency2;
+                    $mount_change_fm = trim($transaction[0]->mount_change_fm);
+                    $symbol2 = $transaction[0]->symbol2;
+
+                    if ($role == 'ALI'){
+                        $cliente = 'Aliado Comercial';
+                    } else {
+                        $cliente = 'Usuario';
+                    }
+
+                    $firsttoken = bin2hex(random_bytes((10 - (10 % 2)) / 2));
+                    $thirdtoken = bin2hex(random_bytes((10 - (10 % 2)) / 2));
+                    $secondtoken = random_int(1000, 9999);
+                    $fourthtoken = random_int(100, 999);
+
+                    $parte1 = $firsttoken."yc";
+                    $parte2 = "klx".$secondtoken.$thirdtoken.$fourthtoken;
+                    $nid = $transaction_id;
+                    $texto = $parte1.$nid.$parte2;
+
+                    $urlrecibo = env('URL_APP').'/v1/whatsapp/'.$texto;
+
+                    $message = "Saludos *".$payer_name."*, la App *Cambios CANAWIL* te informa que hemos realizado "
+                        . "exitosamente la transferencia por ti solicitada con la siguente información detallada:\n\n"
+                        . "*".$cliente.":* ".$comercial_name."\n"
+                        . "*ID:* ".$transfer_id."\n"
+                        . "*Fecha:* ".$formatted_date."\n"
+                        . "*Tipo de Cambio:* ".$a_to_b."\n"
+                        . "*Monto a Cambiar:* ".$mount_value_fm.$symbol.' '.$currency."\n"
+                        . "*Tasa de Cambio:* ".$formatted_value.$symbol.' '.$currency."\n"
+                        . "*Monto a Pagar:* ".$mount_change_fm.$symbol2.' '.$currency2."\n\n"
+                        . "Los demas detalles de la transacción puede verlo accediendo al link que le dejamos a continuación:\n\n"
+                        . $urlrecibo."\n\n";
+
+                    $message2 = "Srs. *".$comercial_name."*, la App *Cambios CANAWIL* te informa que hemos realizado "
+                        . "exitosamente la transferencia enviada por Uds. con la siguente información detallada:\n\n"
+                        . "*".$cliente.":* ".$comercial_name."\n"
+                        . "*ID:* ".$transfer_id."\n"
+                        . "*Fecha:* ".$formatted_date."\n"
+                        . "*Tipo de Cambio:* ".$a_to_b."\n"
+                        . "*Monto a Cambiar:* ".$mount_value_fm.$symbol.' '.$currency."\n"
+                        . "*Tasa de Cambio:* ".$formatted_value.$symbol.' '.$currency."\n"
+                        . "*Monto a Pagar:* ".$mount_change_fm.$symbol2.' '.$currency2."\n\n"
+                        . "Los demas detalles de la transacción puede verlo accediendo al link que le dejamos a continuación:\n\n"
+                        . $urlrecibo."\n\n";
+
+                    $origin = $request->origin;
+                    if ($origin == 'transaction'){
+                        session(['submenupopup_id' => 29]);
+                        session(['menupopup_id' => 20]);
+
+                        $permissions = $this->permissions(3);
+
+                        $sql = "SELECT * FROM v_transactions where sendstatus <> 'PEN' and sendstatus <> 'PRO' and sendstatus <> 'TRA' and rowstatus = 'ACT'";
+                        $transactions = DB::select($sql);
+
+                        $transactions2 = V_transaction::where('sendstatus', '<>', 'PEN')->where('sendstatus', '<>', 'PRO')->where('sendstatus', '<>', 'TRA')->where('rowstatus', 'ACT')->orderBy('id', 'desc')->simplePaginate(10);
+                        $transactions2->withQueryString();
+
+                        return view('transaction.index', compact('permissions', 'transactions',
+                        'transactions2', 'message', 'payer_cellphone', 'user_cellphone', 'message2'));
+                    } else {
+                        session(['submenupopup_id' => 29]);
+                        session(['menupopup_id' => 28]);
+
+                        $permissions = $this->permissions(5);
+
+                        $sql = "SELECT * FROM v_transactions where sendstatus = 'PRO' and rowstatus = 'ACT'";
+                        $transfers = DB::select($sql);
+
+                        $transfers2 = V_transaction::where('sendstatus', 'PRO')->where('rowstatus', 'ACT')->orderBy('id', 'desc')->simplePaginate(10);
+                        $transfers2->withQueryString();
+
+                        return view('transfer.index', compact('permissions', 'transfers', 'transfers2',
+                                'message', 'payer_cellphone', 'message2', 'user_cellphone'));
+                    }
+                }
                 break;
             case 'photo_trans':
                 $transaction_id = request('transaction_id');
@@ -460,7 +993,7 @@ class TransactionController extends Controller
 
                 $urlrecibo = env('URL_APP').'/v1/whatsapp/'.$texto;
 
-                $message = "Saludos *".$payer_name."*, la App *Canawil Cambios* te informa que hemos realizado "
+                $message = "Saludos *".$payer_name."*, la App *Cambios CANAWIL* te informa que hemos realizado "
                     . "exitosamente la transferencia por ti solicitada con la siguente información detallada:\n\n"
                     . "*".$cliente.":* ".$comercial_name."\n"
                     . "*ID:* ".$transfer_id."\n"
@@ -472,7 +1005,7 @@ class TransactionController extends Controller
                     . "Los demas detalles de la transacción puede verlo accediendo al link que le dejamos a continuación:\n\n"
                     . $urlrecibo."\n\n";
 
-                $message2 = "Srs. *".$comercial_name."*, la App *Canawil Cambios* te informa que hemos realizado "
+                $message2 = "Srs. *".$comercial_name."*, la App *Cambios CANAWIL* te informa que hemos realizado "
                     . "exitosamente la transferencia enviada por Uds. con la siguente información detallada:\n\n"
                     . "*".$cliente.":* ".$comercial_name."\n"
                     . "*ID:* ".$transfer_id."\n"
@@ -530,6 +1063,14 @@ class TransactionController extends Controller
         //
     }
 
+    public function getway($id)
+    {
+        $sql = "select * from way_to_pays where country_id='".$id."' order by description";
+        $way_to_pays = DB::select($sql);
+
+        return $way_to_pays;
+    }
+
     public function description($id)
     {
         $sql = "select * from v_conversions where id='".$id."'";
@@ -550,9 +1091,16 @@ class TransactionController extends Controller
         $country_id = $conversions[0]->country_id;
         $country2_id = $conversions[0]->country2_id;
         $two_decimals = $conversions[0]->two_decimals;
+        $commission = $conversions[0]->customer_commission;
 
         $sql = "select * from canawil_banks where country_id='".$country_id."' order by bank_name";
         $canawil_banks = DB::select($sql);
+
+        $puser_id = auth()->user()->id;
+        $country_id = auth()->user()->country_id;
+        $sql = "select * from v_users where id='".$puser_id."' and rowstatus = 'ACT'";
+        $users = DB::select($sql);
+        $role_name = $users[0]->role_name;
 
         $sql = "select * from way_to_pays where country_id='".$country_id."' order by description";
         $way_to_pays = DB::select($sql);
@@ -580,6 +1128,8 @@ class TransactionController extends Controller
         $datos['two_decimals'] = $two_decimals;
         $datos['canawil_banks'] = $canawil_banks;
         $datos['way_to_pays'] = $way_to_pays;
+        $datos['commission'] = $commission;
+        $datos['role_name'] = $role_name;
 
         return $datos;
     }
@@ -675,17 +1225,45 @@ class TransactionController extends Controller
 
     public function account($id)
     {
-        $sql = "select account_number from canawil_banks where id=".$id."";
+        $sql = "select account_number, description from v_canawil_banks where id=".$id."";
         $canawil_banks = DB::select($sql);
 
         $account_number = '';
         foreach ($canawil_banks as $row2) {
             $account_number = $row2->account_number;
+            $description = $row2->description;
         }
 
         $datos = [];
 
         $datos['account_number'] = $account_number;
+        $datos['description'] = $description;
+
+        return $datos;
+    }
+
+    public function account2($id)
+    {
+        $sql = "select * from v_currency_banks where id=".$id."";
+        $currency_banks = DB::select($sql);
+
+        $account_number = '';
+        $currency = '';
+        $symbol = '';
+        $currency_id = 0;
+        foreach ($currency_banks as $row2) {
+            $account_number = $row2->account_number;
+            $currency = $row2->currency;
+            $symbol = $row2->symbol;
+            $currency_id = $row2->currency_id;
+        }
+
+        $datos = [];
+
+        $datos['account_number'] = $account_number;
+        $datos['currency'] = $currency;
+        $datos['symbol'] = $symbol;
+        $datos['currency_id'] = $currency_id;
 
         return $datos;
     }
@@ -703,6 +1281,24 @@ class TransactionController extends Controller
         $datos = [];
 
         $datos['reference'] = $reference_text;
+
+        return $datos;
+    }
+
+    public function available($id)
+    {
+        $sql = "select sum(available_amount) as available_amount from buys where currencybank_id=".$id." and rowstatus = 'ACT'";
+        $buys = DB::select($sql);
+
+        $available_amount = 0.00;
+        foreach ($buys as $row2) {
+            $available_amount = $row2->available_amount;
+        }
+
+        $datos = [];
+
+        $datos['available_amount'] = number_format($available_amount,2,',','.');
+        $datos['real_available_amount'] = $available_amount;
 
         return $datos;
     }
@@ -796,16 +1392,16 @@ class TransactionController extends Controller
 
         switch ($prole){
             case 'ADM':
-                $sql = "select * from v_transfers where transfer_date = date(now()) and sendstatus = 'TRA' and rowstatus = 'ACT'";
+                $sql = "select * from v_admtransfers where transfer_date = date(now()) and sendstatus = 'TRA' and rowstatus = 'ACT'";
                 $transfers = DB::select($sql);
 
-                $transfers2 = V_transfer::where('transfer_date', date('Y-m-d'))->where('sendstatus', 'TRA')->where('rowstatus', 'ACT')->orderBy('id', 'desc')->simplePaginate(10);
+                $transfers2 = V_admtransfers::where('transfer_date', date('Y-m-d'))->where('sendstatus', 'TRA')->where('rowstatus', 'ACT')->orderBy('id', 'desc')->simplePaginate(10);
                 $transfers2->withQueryString();
 
                 $datos = [];
                 $datos2 = [];
 
-                $sql = "select distinct conversion_id from v_transfers where transfer_date = date(now()) and rowstatus = 'ACT'";
+                $sql = "select distinct conversion_id from v_admtransfers where transfer_date = date(now()) and sendstatus = 'TRA' and rowstatus = 'ACT'";
                 $transfers_conversion = DB::select($sql);
 
                 if (!empty($transfers_conversion) && count($transfers_conversion) > 0){
@@ -822,8 +1418,8 @@ class TransactionController extends Controller
                         $symbol2 = $conversions[0]->symbol2;
                         $currency2 = $conversions[0]->currency2;
 
-                        $sql = "select sum(mount_value) as mount_value, sum(mount_change) as mount_change from v_transfers
-                        where transfer_date = date(now()) and conversion_id = ".$conversion_id." and rowstatus = 'ACT'";
+                        $sql = "select sum(net_amount) as mount_value, sum(mount_change) as mount_change from v_admtransfers
+                        where transfer_date = date(now()) and conversion_id = ".$conversion_id." and sendstatus = 'TRA' and rowstatus = 'ACT'";
                         $sum = DB::select($sql);
                         $total_mount_value = $sum[0]->mount_value;
                         $total_mount_change = $sum[0]->mount_change;
@@ -832,15 +1428,15 @@ class TransactionController extends Controller
                             'typeuser_char' => $typeuser_char,
                             'divisa1' => $currency_description,
                             'mount_value' => $total_mount_value,
-                            'total_mount_value' => number_format($total_mount_value,2).$symbol.' '.$currency,
+                            'total_mount_value' => number_format($total_mount_value,2,',','.').$symbol.' '.$currency,
                             'divisa2' => $currency_description2,
                             'mount_change' => $total_mount_change,
-                            'total_mount_change' => number_format($total_mount_change,2).$symbol2.' '.$currency2
+                            'total_mount_change' => number_format($total_mount_change,2,',','.').$symbol2.' '.$currency2
                         ];
                     }
                 }
 
-                $sql = "select distinct a_to_b, currency_id, currency2_id from v_transfers where transfer_date = date(now()) and rowstatus = 'ACT'";
+                $sql = "select distinct a_to_b, currency_id, currency2_id from v_admtransfers where transfer_date = date(now()) and sendstatus = 'TRA' and rowstatus = 'ACT'";
                 $transfers_sum = DB::select($sql);
 
                 if (!empty($transfers_sum) && count($transfers_sum) > 0){
@@ -849,11 +1445,12 @@ class TransactionController extends Controller
                         $currency_id = $row3->currency_id;
                         $currency2_id = $row3->currency2_id;
 
-                        $sql = "select sum(mount_value) as mount_value, sum(mount_change) as mount_change from v_transfers
-                        where transfer_date = date(now()) and a_to_b = '".$a_to_b."' and rowstatus = 'ACT'";
+                        $sql = "select sum(net_amount) as mount_value, sum(mount_change) as mount_change, sum(canawil_amount_withheld) as canawil_amount_withheld from v_admtransfers
+                        where transfer_date = date(now()) and a_to_b = '".$a_to_b."' and sendstatus = 'TRA' and rowstatus = 'ACT'";
                         $sum2 = DB::select($sql);
                         $general_mount_value = $sum2[0]->mount_value;
                         $general_mount_change = $sum2[0]->mount_change;
+                        $general_canawil_amount_withheld = $sum2[0]->canawil_amount_withheld;
 
                         $sql = "select * from currencies where id = ".$currency_id."";
                         $currencies1 = DB::select($sql);
@@ -867,8 +1464,9 @@ class TransactionController extends Controller
 
                         $datos2[] = [
                             'a_to_b' => $a_to_b,
-                            'general_mount_value' => number_format($general_mount_value,2).$symbol.' '.$currency,
-                            'general_mount_change' => number_format($general_mount_change,2).$symbol2.' '.$currency2
+                            'general_mount_value' => number_format($general_mount_value,2,',','.').$symbol.' '.$currency,
+                            'general_mount_change' => number_format($general_mount_change,2,',','.').$symbol2.' '.$currency2,
+                            'general_canawil_amount_withheld' => number_format($general_canawil_amount_withheld,2,',','.').$symbol.' '.$currency
                         ];
                     }
                 }
@@ -891,10 +1489,13 @@ class TransactionController extends Controller
                         $currency_id = $row2->currency_id;
                         $a_to_b = $row2->a_to_b;
 
-                        $sql = "select sum(mount_value) as mount_value from v_transactions where user_id = ".$puser_id." and
-                         send_date = date(now()) and sendstatus <> 'PEN' and conversion_id = ".$conversion_id." and rowstatus = 'ACT'";
+                        $sql = "select sum(net_amount) as send_amount, sum(mount_value) as mount_value, sum(amount_withheld) as amount_withheld
+                        from v_transactions where user_id = ".$puser_id." and send_date = date(now()) and sendstatus <> 'PEN'
+                        and conversion_id = ".$conversion_id." and rowstatus = 'ACT'";
                         $sum2 = DB::select($sql);
+                        $general_send_amount = $sum2[0]->send_amount;
                         $general_mount_value = $sum2[0]->mount_value;
+                        $general_amount_withheld = $sum2[0]->amount_withheld;
 
                         $sql = "select * from currencies where id = ".$currency_id."";
                         $currencies1 = DB::select($sql);
@@ -903,7 +1504,9 @@ class TransactionController extends Controller
 
                         $datos2[] = [
                             'a_to_b' => $a_to_b,
-                            'general_mount_value' => number_format($general_mount_value,2).$symbol.' '.$currency,
+                            'general_send_amount' => number_format($general_send_amount,2,',','.').$symbol.' '.$currency,
+                            'general_mount_value' => number_format($general_mount_value,2,',','.').$symbol.' '.$currency,
+                            'general_amount_withheld' => number_format($general_amount_withheld,2,',','.').$symbol.' '.$currency,
                         ];
                     }
                 }

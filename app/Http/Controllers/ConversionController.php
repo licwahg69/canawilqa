@@ -109,6 +109,7 @@ class ConversionController extends Controller
                 $Conversion->conversion_value = request('conversion_value');
                 $Conversion->reference_conversion_value = request('reference_conversion_value');
                 $Conversion->two_decimals = request('twodecimals');
+                $Conversion->customer_commission = request('customer_commission');
 
                 $Conversion->save();
 
@@ -140,6 +141,7 @@ class ConversionController extends Controller
                 $Conversion->reference_currency_id = request('reference_currency_id');
                 $Conversion->typeuser = request('typeuser');
                 $Conversion->two_decimals = request('twodecimals');
+                $Conversion->customer_commission = request('customer_commission');
 
                 $Conversion->save();
 

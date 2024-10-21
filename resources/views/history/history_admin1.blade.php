@@ -56,6 +56,11 @@
 @section('content')
 <form action="/history" method="POST" id="view" name="view" class="formeli">
     @csrf
+
+    <input type="hidden" id="report" name="report" value="{{$report}}">
+    <input type="hidden" id="desde" name="desde" value="{{$desde}}">
+    <input type="hidden" id="hasta" name="hasta" value="{{$hasta}}">
+    <input type="hidden" id="user_id" name="user_id" value="{{$user_id}}">
     <input type="hidden" id="transfer_id" name="transfer_id" value="">
     <input type="hidden" id="type_screen" name="type_screen" value="">
     <input type="hidden" id="toaction" name="toaction" value="">
@@ -113,6 +118,7 @@
                                             <th class="text-center">Tipo de Cambio</th>
                                             <th class="text-center">Total General recibido</th>
                                             <th class="text-center">Total General pagado</th>
+                                            <th class="text-center">Total de ganancias</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -126,6 +132,9 @@
                                                 </td>
                                                 <td class="text-right">
                                                     <label style="color:darkblue; font-size:20px">{{$dato2['general_mount_change']}}</label>
+                                                </td>
+                                                <td class="text-right">
+                                                    <label style="color: red; font-size:20px">{{$dato2['general_canawil_amount_withheld']}}</label>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -228,6 +237,16 @@
                                                 </div>
                                             </div>
                                         </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Total de ganancias:</b>
+                                                </div>
+                                                <div style="color: red">
+                                                    <b>{{ $dato2['general_canawil_amount_withheld'] }}</b>
+                                                </div>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -242,9 +261,8 @@
                                     <th class="text-center">Fecha</th>
                                     <th class="text-center">Aliado/Usuario</th>
                                     <th class="text-center">Conversión</th>
-                                    <th class="text-center">Descripción</th>
-                                    <th width="120" class="text-center">Monto a Cambiar</th>
-                                    <th width="120" class="text-center">Monto a Pagar</th>
+                                    <th width="120" class="text-center">Monto Recibido</th>
+                                    <th width="120" class="text-center">Monto Pagado</th>
                                     <th width="30" class="text-center">Ver</th>
                                 </tr>
                             </thead>
@@ -255,15 +273,14 @@
                                         <td class="text-left">{{ date('d-m-Y',strtotime($transfer->transfer_date)) }}</td>
                                         <td class="text-left">{{ $transfer->comercial_name }}</td>
                                         <td class="text-left">{{ $transfer->a_to_b }}</td>
-                                        <td class="text-left">{{ $transfer->complete_description }}</td>
                                         <input type="hidden" id="nombre{{ $transfer->id }}"
-                                            value="{{ $transfer->complete_description }}">
-                                        <td width="120" class="text-right">{{ trim($transfer->mount_value_fm) }} {{$transfer->currency}}</td>
+                                            value="">
+                                        <td width="120" class="text-right">{{ trim($transfer->net_amount_fm) }} {{$transfer->currency}}</td>
                                         <td width="120" class="text-right">{{ trim($transfer->mount_change_fm) }} {{$transfer->currency2}}</td>
                                         <td width="30" class="text-center">
                                             @if ($permissions > 0)
                                                 <a href="#" onclick="validar('see',{{ $transfer->id }})"
-                                                    class="btn btn-xs btn-default text-success mx-1 shadow" title="Ver detalles de {{ $transfer->complete_description }}">
+                                                    class="btn btn-xs btn-default text-success mx-1 shadow" title="Ver detalles">
                                                     <i class="fas fa-lg fa-fw fa-eye"></i>
                                                 </a>
                                             @endif
@@ -319,31 +336,21 @@
                                         </div>
                                     </td>
                                     <input type="hidden" id="nombre{{ $transfer2->id }}"
-                                                value="{{ $transfer2->complete_description }}">
+                                                value="">
                                     <td>
                                         <div class="row">
                                             <div>
-                                                <b>Descripción:</b>
+                                                <b>Monto Recibido:</b>
                                             </div>
                                             <div>
-                                                {{ $transfer2->complete_description }}
+                                                {{ $transfer2->net_amount_fm }} {{$transfer2->currency}}
                                             </div>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="row">
                                             <div>
-                                                <b>Monto a Cambiar:</b>
-                                            </div>
-                                            <div>
-                                                {{ $transfer2->mount_value_fm }} {{$transfer2->currency}}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="row">
-                                            <div>
-                                                <b>Monto a Pagar:</b>
+                                                <b>Monto Pagado:</b>
                                             </div>
                                             <div>
                                                 {{ $transfer2->mount_change_fm }} {{$transfer2->currency2}}
@@ -354,7 +361,7 @@
                                         @if ($permissions > 0)
                                             <a href="#" onclick="validar('see',{{ $transfer2->id }})"
                                                 class="btn btn-success btn-sm" data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="Ver detalles de {{ $transfer2->complete_description }}">Ver detalles <i class="fa fa-eye"></i>
+                                                title="Ver detalles">Ver detalles <i class="fa fa-eye"></i>
                                             </a>
                                         @endif
                                     </td>
@@ -379,7 +386,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 

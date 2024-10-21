@@ -72,16 +72,31 @@
                                 @if ($user->nivel == 1)
                                     @if ($user->endnivel2 == 'Y')
                                         @if ($endline == 'N')
-                                            <li  class="nav-item">
-                                                @if (session('menupopup_id') == $user->menupopup_id)
-                                                    <a class="nav-link active" href="#" onclick="document.getElementById('href').value = '{{$user->href}}'; document.getElementById('forcelogout').submit();">
-                                                @else
-                                                    <a class="nav-link" href="#" onclick="document.getElementById('href').value = '{{$user->href}}'; document.getElementById('forcelogout').submit();">
+                                            @if ($user->menupopup_name != 'Pagar Crédito')
+                                                <li  class="nav-item">
+                                                    @if (session('menupopup_id') == $user->menupopup_id)
+                                                        <a class="nav-link active" href="#" onclick="document.getElementById('href').value = '{{$user->href}}'; document.getElementById('forcelogout').submit();">
+                                                    @else
+                                                        <a class="nav-link" href="#" onclick="document.getElementById('href').value = '{{$user->href}}'; document.getElementById('forcelogout').submit();">
+                                                    @endif
+                                                        <i class="{{$user->icon}}"></i>
+                                                            <p> {{$user->menupopup_name}}</p>
+                                                        </a>
+                                                </li>
+                                            @else
+                                                @if ($user->credit == 'Y')
+                                                    <li  class="nav-item">
+                                                        @if (session('menupopup_id') == $user->menupopup_id)
+                                                            <a class="nav-link active" href="#" onclick="document.getElementById('href').value = '{{$user->href}}'; document.getElementById('forcelogout').submit();">
+                                                        @else
+                                                            <a class="nav-link" href="#" onclick="document.getElementById('href').value = '{{$user->href}}'; document.getElementById('forcelogout').submit();">
+                                                        @endif
+                                                            <i class="{{$user->icon}}"></i>
+                                                                <p> {{$user->menupopup_name}}</p>
+                                                            </a>
+                                                    </li>
                                                 @endif
-                                                    <i class="{{$user->icon}}"></i>
-                                                    <p> {{$user->menupopup_name}}</p>
-                                                </a>
-                                            </li>
+                                            @endif
                                         @else
                                                 </ul>
                                             </li>

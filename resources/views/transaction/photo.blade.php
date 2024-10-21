@@ -11,12 +11,18 @@
     @csrf
     <input type="hidden" id="transaction_id" name="transaction_id" value="{{$transaction_id}}">
     <input type="hidden" id="orientation" name="orientation" value="">
-    <input type="hidden" id="toaction" name="toaction" value="photo">
+    <input type="hidden" id="credit" name="credit" value="{{$credit}}">
+    <input type="hidden" id="creditcash" name="creditcash" value="{{$creditcash}}">
+    <input type="hidden" id="toaction" name="toaction" value="">
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-header"><i class="fas fa-desktop"></i>
-                    <b> Agregar capture de pantalla de la transacción bancaria hecha</b>
+                    @if ($credit == 'Y' && $creditcash == 'N')
+                        <b> Operación a Crédito, no es necesaria la imagén de la transacción bancaria</b>
+                    @else
+                        <b> Agregar capture de pantalla de la transacción bancaria hecha</b>
+                    @endif
                 </div>
                 <div class="card-body">
                     <div class="form-group">
@@ -37,9 +43,12 @@
                             Nombre del Archivo:
                         </label>
                         <input readonly class="form-control" type="text" id="linkaddress_i"
-                            name="linkaddress_i" value="" maxlength=250'>
+                            name="linkaddress_i" value="" maxlength=250>
                         <div id="transaction_error" class="talert" style='display: none;'>
                             <p class="text-danger">Debe escoger una imagen para guardarla con la transacción</p>
+                        </div>
+                        <div id="transaction2_error" class="talert" style='display: none;'>
+                            <p class="text-danger">Esta operación debe hacerla de contado porque sobrepasa su límite de crédito. Escoja una imagen para guardarla con la transacción</p>
                         </div>
                     </div>
                     <div class='col-lg-5 form-group'>
@@ -56,9 +65,15 @@
                     </div>
                     <br>
                     <div class="row">
-                        <div class="col-md-2 form-group text-center">
-                            <button type="button" id="buttongrabar" onclick="validar()" class="btn btn-success btn-block">Guardar  <i class="fa fa-save"></i></button>
-                        </div>
+                        @if ($credit == 'Y' && $creditcash == 'N')
+                            <div class="col-md-2 form-group text-center">
+                                <button type="button" id="buttongrabar" onclick="validar(2)" class="btn btn-secondary btn-block">Seguir  <i class="fa fa-arrow-circle-left"></i></button>
+                            </div>
+                        @else
+                            <div class="col-md-2 form-group text-center">
+                                <button type="button" id="buttongrabar" onclick="validar(1)" class="btn btn-success btn-block">Guardar  <i class="fa fa-save"></i></button>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -73,7 +88,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 
@@ -147,12 +162,24 @@
 
     function validar(){
         var xseguir = true;
+        var xcredit = document.getElementById("credit").value;
+        var xcreditcash = document.getElementById("creditcash").value;
         var xlinkaddress_i = document.getElementById("linkaddress_i").value;
-        if (xlinkaddress_i.length < 1){
+        if (xlinkaddress_i.length < 1 && xcredit == 'N'){
             xseguir = false;
             document.getElementById("transaction_error").style.display = "block";
+        } else {
+            if (xlinkaddress_i.length < 1 && xcreditcash == 'Y'){
+                xseguir = false;
+                document.getElementById("transaction2_error").style.display = "block";
+            }
         }
         if (xseguir){
+            if (xcase == 1){
+                document.getElementById("toaction").value = 'photo';
+            } else {
+                document.getElementById("toaction").value = 'creditphoto';
+            }
             document.view.submit();
         }
     }

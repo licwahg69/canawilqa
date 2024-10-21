@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Transfer;
 use App\Models\V_transfer;
+use App\Models\V_transaction;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -78,17 +79,40 @@ class TransferController extends Controller
 
         switch ($toaction){
             case 'save_transfer':
-                $transfer_id = $request->transfer_id;
+                $transaction_id = $request->transaction_id;
 
-                $Transfer = V_transfer::find($transfer_id);
+                $sql = "SELECT * FROM v_transactions where id = ".$transaction_id." and rowstatus = 'ACT'";
+                $transactions = DB::select($sql);
+                $cellphone = $transactions[0]->cellphone;
+                $country_id = $transactions[0]->country2_id;
+                $mount_change = $transactions[0]->mount_change;
 
-                $transaction_id = $Transfer->transaction_id;
-                $payer_cellphone = $Transfer->cellphone;
+                $sql = "SELECT * FROM v_currency_banks where country_id = ".$country_id." and rowstatus = 'ACT'";
+                $currency_banks = DB::select($sql);
 
-                $type_screen = request('type_screen');
+                $sql = "SELECT phone_code FROM countries WHERE '".$cellphone."' LIKE phone_code || '%'";
+                $phonecode = DB::select($sql);
+                $phone_code = $phonecode[0]->phone_code;
 
-                return view('transfer.photo_trans', compact('transaction_id', 'transfer_id',
-                        'payer_cellphone'));
+                $onlycellphone = str_replace($phone_code, '', $cellphone);
+
+                $sql = "SELECT * FROM v_transfers where transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
+                $transfers = DB::select($sql);
+
+                $sql = "SELECT sum(amount) as amount FROM v_transferbuys where transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
+                $transferbuys = DB::select($sql);
+
+                $amount_rest = 0;
+                foreach($transferbuys as $row3){
+                    $amount_rest = $row3->amount;
+                }
+
+                $sumamount_rest = $mount_change - $amount_rest;
+
+                $origin = 'transfer';
+
+                return view('transaction.transfer', compact('transactions', 'phone_code', 'origin',
+                'onlycellphone', 'currency_banks', 'transfers', 'amount_rest', 'sumamount_rest'));
                 break;
             case 'photo_trans':
                 $transaction_id = request('transaction_id');
@@ -158,7 +182,7 @@ class TransferController extends Controller
 
                 $urlrecibo = env('URL_APP').'/v1/whatsapp/'.$texto;
 
-                $message = "Saludos *".$payer_name."*, la App *Canawil Cambios* te informa que hemos realizado "
+                $message = "Saludos *".$payer_name."*, la App *Cambios CANAWIL* te informa que hemos realizado "
                     . "exitosamente la transferencia por ti solicitada con la siguente información detallada:\n\n"
                     . "*".$cliente.":* ".$comercial_name."\n"
                     . "*ID:* ".$transfer_id."\n"
@@ -170,7 +194,7 @@ class TransferController extends Controller
                     . "Los demas detalles de la transacción puede verlo accediendo al link que le dejamos a continuación:\n\n"
                     . $urlrecibo."\n\n";
 
-                $message2 = "Srs. *".$comercial_name."*, la App *Canawil Cambios* te informa que hemos realizado "
+                $message2 = "Srs. *".$comercial_name."*, la App *Cambios CANAWIL* te informa que hemos realizado "
                     . "exitosamente la transferencia enviada por Uds. con la siguente información detallada:\n\n"
                     . "*".$cliente.":* ".$comercial_name."\n"
                     . "*ID:* ".$transfer_id."\n"
@@ -194,11 +218,14 @@ class TransferController extends Controller
                 'message', 'payer_cellphone', 'message2', 'user_cellphone'));
                 break;
             case 'see':
-                $transfer_id = $request->transfer_id;
+                $transaction_id = $request->transfer_id;
 
-                $sql = "SELECT * FROM v_transfers where id = ".$transfer_id." and rowstatus = 'ACT'";
+                $sql = "SELECT * FROM v_transfers where transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
                 $transfers = DB::select($sql);
-                $cellphone = $transfers[0]->cellphone;
+
+                $sql = "SELECT * FROM v_transactions where id = ".$transaction_id." and rowstatus = 'ACT'";
+                $transactions = DB::select($sql);
+                $cellphone = $transactions[0]->cellphone;
 
                 $sql = "SELECT phone_code FROM countries WHERE '".$cellphone."' LIKE phone_code || '%'";
                 $phonecode = DB::select($sql);
@@ -206,7 +233,8 @@ class TransferController extends Controller
 
                 $onlycellphone = str_replace($phone_code, '', $cellphone);
 
-                return view('transfer.see', compact('transfers', 'phone_code', 'onlycellphone'));
+                return view('transfer.see', compact('transactions', 'transfers', 'phone_code',
+                'onlycellphone'));
                 break;
          }
     }
@@ -250,10 +278,10 @@ class TransferController extends Controller
 
         $permissions = $this->permissions(1);
 
-        $sql = "SELECT * FROM v_transfers where sendstatus = 'PRO' and rowstatus = 'ACT'";
+        $sql = "SELECT * FROM v_transactions where sendstatus = 'PRO' and rowstatus = 'ACT'";
         $transfers = DB::select($sql);
 
-        $transfers2 = V_transfer::where('sendstatus', 'PRO')->where('rowstatus', 'ACT')->orderBy('id', 'desc')->simplePaginate(10);
+        $transfers2 = V_transaction::where('sendstatus', 'PRO')->where('rowstatus', 'ACT')->orderBy('id', 'desc')->simplePaginate(10);
         $transfers2->withQueryString();
 
         $message = '';

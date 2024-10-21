@@ -100,6 +100,7 @@ class CanawilBankController extends Controller
                 $CanawilBank->country_id = request('country_id');
                 $CanawilBank->bank_name = request('bank_name');
                 $CanawilBank->account_number = request('account_number');
+                $CanawilBank->waytopay_id = request('waytopay_id');
 
                 $CanawilBank->save();
 
@@ -123,12 +124,16 @@ class CanawilBankController extends Controller
                 break;
             case 'edit':
                 $banks = CanawilBank::find($canawilbank_id);
+                $country_id = $banks->country_id;
 
                 $sql = "SELECT * FROM countries where rowstatus = 'ACT'";
                 $countries = DB::select($sql);
 
+                $sql = "select * from way_to_pays where country_id='".$country_id."' order by description";
+                $way_to_pays = DB::select($sql);
+
                 // retornar la vista edit
-                return view('canawilbank.edit', compact('banks', 'countries'));
+                return view('canawilbank.edit', compact('banks', 'countries', 'way_to_pays'));
                 break;
             case 'update':
                 $CanawilBank = CanawilBank::find($canawilbank_id);
@@ -136,6 +141,7 @@ class CanawilBankController extends Controller
                 $CanawilBank->country_id = request('country_id');
                 $CanawilBank->bank_name = request('bank_name');
                 $CanawilBank->account_number = request('account_number');
+                $CanawilBank->waytopay_id = request('waytopay_id');
 
                 $CanawilBank->save();
 

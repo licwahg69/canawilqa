@@ -115,7 +115,7 @@
                       <tr>
                         <td style="width:260px;padding:0;vertical-align:top;color:#153643;">
                           <br>
-                          <p style="margin:0 0 25px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;" align="center"><a target="_blank" href="{{$Hpemail->url}}" class="btn btn-success btn-xs" data-bs-toggle="tooltip" data-bs-placement="top" title="">Link para crear tu contraseña en CANAWIL <img width="14px" src="https://mascotamall.com/checkicon2.png"></a></p>
+                          <p style="margin:0 0 25px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;" align="center"><a target="_blank" href="{{$Hpemail->url}}" class="btn btn-success btn-xs" data-bs-toggle="tooltip" data-bs-placement="top" title="">Link para crear tu contraseña en Cambios CANAWIL <img width="14px" src="https://mascotamall.com/checkicon2.png"></a></p>
                         </td>
                       </tr>
                     </table>
@@ -127,10 +127,10 @@
                       <tr>
                         <td style="width:260px;padding:0;vertical-align:top;color:#153643;">
                           <br><br>
-                          <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">Al hacer click en el botón del link, podrás crear el password a tu cuenta de Usuario en CANAWIL y terminar de llenar los datos de tu cuenta.</p>
+                          <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">Al hacer click en el botón del link, podrás crear el password a tu cuenta de Usuario en Cambios CANAWIL y terminar de llenar los datos de tu cuenta.</p>
                           <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;">Gracias por confiar en nosotros, tu mejor opción para cambios y transferencias.</p>
                           <br>
-                          <h2>El equipo de CANAWIL</h2>
+                          <h2>El equipo de Cambios CANAWIL</h2>
                           <br><br>
                           <p style="margin:0 0 12px 0;font-size:16px;line-height:24px;font-family:Arial,sans-serif;color: rgb(4, 55, 4)"><b><img width="28px" src="https://mascotamall.com/green2.png"> Te invitamos a pensar en VERDE, NO imprimas este correo si no es necesario. El planeta te lo agradecerá.</b> <img width="38px" src="https://mascotamall.com/green.png"></p>
                         </td>

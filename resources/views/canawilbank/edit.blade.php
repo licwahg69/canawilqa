@@ -21,7 +21,7 @@
                     <div class='row'>
                         <div class="col-md-4 form-group">
                             <label for="country_id">País (*):</label>
-                            <select id="country_id" name="country_id" class="form-control" tabindex="1" onchange="quitaMensaje()" autofocus>
+                            <select id="country_id" name="country_id" class="form-control" tabindex="1" onchange="getWayToPay(this.value), quitaMensaje()" autofocus>
                                 @if (old('country_id') > 0)
                                     @foreach ($countries as $country)
                                         @if (old('country_id') == $country->id)
@@ -59,6 +59,23 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-4 form-group">
+                            <label for="waytopay_id">Medio de pago (*):</label>
+                            <select id="waytopay_id" name="waytopay_id" class="form-control" onchange="quitaMensaje()">
+                                @foreach ($way_to_pays as $way_to_pay)
+                                        @if ($banks->waytopay_id == $way_to_pay->id)
+                                            <option value="{{$way_to_pay->id}}" selected>{{$way_to_pay->description}}</option>
+                                        @else
+                                            <option value="{{$way_to_pay->id}}">{{$way_to_pay->description}}</option>
+                                        @endif
+                                    @endforeach
+                            </select>
+                            <div id="waytopay_id_error" class="talert" style='display: none;'>
+                                <p class="text-danger">El Medio de pago es requerido</p>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-md-12 form-group">
                         <b>(*) Campos obligatorios</b>
                     </div>
@@ -83,7 +100,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 
@@ -91,6 +108,31 @@
 <script>
     function quitaMensaje(){
         $(".talert").css("display", "none");
+    }
+
+    function getWayToPay(xxid) {
+        fetch(`/getway/${xxid}`)
+            .then(response => response.json())
+            .then(jsondata => showDescripcion(jsondata))
+    }
+
+    function showDescripcion(jsondata){
+
+        let selectWaytoPay = document.getElementById('waytopay_id');
+        selectWaytoPay.innerHTML = ''; // Limpiar contenido anterior
+
+        // Crear y añadir una opción por defecto
+        let defaultOption2 = document.createElement('option');
+        defaultOption2.value = '';
+        defaultOption2.text = 'Seleccionar';
+        selectWaytoPay.appendChild(defaultOption2);
+
+        jsondata.forEach(way => {
+            let option2 = document.createElement('option');
+            option2.value = way.id;  // Asumiendo que el id está en la propiedad 'id'
+            option2.text = way.description;  // Asumiendo que el nombre del estado está en la propiedad 'name'
+            selectWaytoPay.appendChild(option2);
+        });
     }
 
     function validar(){

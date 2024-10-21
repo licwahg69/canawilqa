@@ -63,9 +63,9 @@
                                             <td width="150" class="text-left">{{ $user->role_name }}</td>
                                             <td width="70" class="text-center">
                                                 <a href="#" onclick="validar('view',{{ $user->id }})"
-                                                    class="btn btn-xs btn-default text-success mx-1 shadow"
-                                                    title="Consultar {{ $user->name }}">
-                                                    <i class="fa fa-lg fa-fw fa-eye"></i>
+                                                    class="btn btn-xs btn-default text-primary mx-1 shadow"
+                                                    title="Editar {{ $user->name }}">
+                                                    <i class="fa fa-lg fa-fw fa-pen"></i>
                                                 </a>
                                                 @if ($permissions > 3)
                                                     <button type="submit" onclick="validar('delete',{{ $user->id }})"
@@ -129,8 +129,8 @@
                                         </td>
                                         <td>
                                             <a href="#" onclick="validar('view',{{ $user2->id }})"
-                                                class="btn btn-success btn-sm" data-bs-toggle="tooltip" data-bs-placement="top"
-                                                title="Ver datos de {{ $user2->name }}">Consultar <i class='fa fa-eye'></i>
+                                                class="btn btn-primary btn-sm" data-bs-toggle="tooltip" data-bs-placement="top"
+                                                title="Editar datos de {{ $user2->name }}">Editar <i class='fa fa-pen'></i>
                                             </a>
                                             @if ($permissions > 3)
                                                 <button type="submit" onclick="validar('delete',{{ $user2->id }})"
@@ -160,7 +160,7 @@
 
 @section('footer')
     <div class="float-right d-sm-inline">
-        <label class="text-primary">© {{ date_format(date_create(date('Y')), 'Y') }} CANAWIL Cambios</label>, todos los derechos
+        <label class="text-primary">© {{ date_format(date_create(date('Y')), 'Y') }} Cambios CANAWIL</label>, todos los derechos
         reservados.
     </div>
 @stop

@@ -37,21 +37,12 @@
                                 <p class="text-danger">La Fecha Hasta es requerida</p>
                             </div>
                         </div>
-                        <div class="col-md-3 form-group">
+                        <div class="col-md-8 form-group">
                             <label for="user_id">Aliado/Usuario:</label>
                             <select id="user_id" name="user_id" class="form-control">
                                 <option value="ALL">Todos</option>
                                 @foreach ($users as $user)
                                     <option value="{{$user->id}}">{{$user->show_comercial_name}}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-5 form-group">
-                            <label for="document_id">Documento:</label>
-                            <select id="document_id" name="document_id" class="form-control">
-                                <option value="ALL">Todos</option>
-                                @foreach ($documents as $document)
-                                    <option value="{{$document->id}}">{{$document->complete_description}}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -78,7 +69,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 

@@ -88,7 +88,7 @@ class UserController extends Controller
         $sql = "SELECT * FROM v_users where rowstatus = 'ACT' and id not in (".$puser_id.")";
         $users = DB::select($sql);
 
-        $users2 = V_user::where('role', 'ADM')->where('id', '!=', $puser_id)->where('rowstatus', 'ACT')->orderBy('name', 'asc')->simplePaginate(10);
+        $users2 = V_user::where('id', '!=', $puser_id)->where('rowstatus', 'ACT')->orderBy('name', 'asc')->simplePaginate(10);
         $users2->withQueryString();
 
         return view('user.index', compact('users', 'users2', 'permissions'));
@@ -362,6 +362,28 @@ class UserController extends Controller
 
                 return view('user.my_perfil_view', compact('users'));
                 break;
+            case 'update2':
+                // Borrar el registro logicamente con el id enviado
+                $User = User::find($user_id);
+
+                $User->credit = request('credit');
+                $User->credit_limit = request('credit_limit');
+
+                $User->save();
+
+                $permissions = $this->permissions(1);
+
+                $puser_id = auth()->user()->id;
+
+                // Obtener todos los empleados de esa compañia con status activo de la BD
+                $sql = "SELECT * FROM v_users where rowstatus = 'ACT' and id not in (".$puser_id.")";
+                $users = DB::select($sql);
+
+                $users2 = V_user::where('id', '!=', $puser_id)->where('rowstatus', 'ACT')->orderBy('name', 'asc')->simplePaginate(10);
+                $users2->withQueryString();
+
+                return view('user.index', compact('users', 'users2', 'permissions'));
+                break;
             case 'delete':
                 // Borrar el registro logicamente con el id enviado
                 $User = User::find($user_id);
@@ -379,7 +401,7 @@ class UserController extends Controller
                 $sql = "SELECT * FROM v_users where rowstatus = 'ACT' and id not in (".$puser_id.")";
                 $users = DB::select($sql);
 
-                $users2 = V_user::where('role', 'ADM')->where('id', '!=', $puser_id)->where('rowstatus', 'ACT')->orderBy('name', 'asc')->simplePaginate(10);
+                $users2 = V_user::where('id', '!=', $puser_id)->where('rowstatus', 'ACT')->orderBy('name', 'asc')->simplePaginate(10);
                 $users2->withQueryString();
 
                 return view('user.index', compact('users', 'users2', 'permissions'));

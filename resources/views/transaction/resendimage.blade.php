@@ -49,7 +49,6 @@
                                 <tr>
                                     <th class="text-center">ID</th>
                                     <th class="text-center">Conversión</th>
-                                    <th class="text-center">Descripción</th>
                                     <th class="text-center">Pagador</th>
                                     <th width="120" class="text-center">Monto a Cambiar</th>
                                     <th width="120" class="text-center">Monto a Pagar</th>
@@ -61,11 +60,10 @@
                                     <tr>
                                         <td class="text-left">{{ $transaction->id }}</td>
                                         <td class="text-left">{{ $transaction->a_to_b }}</td>
-                                        <td class="text-left">{{ $transaction->complete_description }}</td>
                                         <td class="text-left">{{ $transaction->payer_name }}</td>
                                         <input type="hidden" id="nombre{{ $transaction->id }}"
                                             value="{{ $transaction->complete_description }}">
-                                        <td width="120" class="text-right">{{ trim($transaction->mount_value_fm) }} {{$transaction->currency}}</td>
+                                        <td width="120" class="text-right">{{ trim($transaction->net_amount_fm) }} {{$transaction->currency}}</td>
                                         <td width="120" class="text-right">{{ trim($transaction->mount_change_fm) }} {{$transaction->currency2}}</td>
                                         <td width="70" class="text-center">
                                             @if ($permissions > 2)
@@ -101,16 +99,6 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
-                                        <div class="row">
-                                            <div>
-                                                <b>Descripción:</b>
-                                            </div>
-                                            <div>
-                                                {{ $transaction2->complete_description }}
-                                            </div>
-                                        </div>
-                                    </td>
                                     <input type="hidden" id="nombre{{ $transaction2->id }}"
                                                 value="{{ $transaction2->complete_description }}">
                                     <td>
@@ -129,7 +117,7 @@
                                                 <b>Monto a Cambiar:</b>
                                             </div>
                                             <div>
-                                                {{ $transaction2->mount_value_fm }} {{$transaction2->currency}}
+                                                {{ $transaction2->net_amount_fm }} {{$transaction2->currency}}
                                             </div>
                                         </div>
                                     </td>
@@ -178,7 +166,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 

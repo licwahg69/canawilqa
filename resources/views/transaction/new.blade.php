@@ -65,13 +65,19 @@
 </style>
 <form action="/transaction" method="POST" id="view" name="view">
     @csrf
+    <input type="hidden" id="currency" name="currency" value="">
+    <input type="hidden" id="symbol" name="symbol" value="">
     <input type="hidden" id="symbol2" name="symbol2" value="">
     <input type="hidden" id="symbol3" name="symbol3" value="">
     <input type="hidden" id="phonecode" name="phonecode" value="">
     <input type="hidden" id="document_id" name="document_id" value="">
     <input type="hidden" id="country2_id" name="country2_id" value="">
     <input type="hidden" id="favorite_value" name="favorite_value" value="">
+    <input type="hidden" id="credit_value" name="credit_value" value="">
     <input type="hidden" id="type_screen" name="type_screen" value="">
+    <input type="hidden" id="credit" name="credit" value="{{$credit}}">
+    <input type="hidden" id="credit_limit" name="credit_limit" value="{{$credit_limit}}">
+    <input type="hidden" id="total_debt" name="total_debt" value="{{$total_debt}}">
     <input type="hidden" id="toaction" name="toaction" value="new">
     <div class="row">
         <div class="col-12">
@@ -111,7 +117,7 @@
                     <br>
                     <div class="row">
                         <div class="col-md-3 form-group">
-                            <label for="mount_value" id="label_mount_value">Monto a cambiar (*):</label>
+                            <label for="mount_value" id="label_mount_value">Monto recibido (*):</label>
                             <input type="text" class="form-control" id="mount_value" name="mount_value" onkeydown="quitaMensaje()" oninput="procesarValor(this)" onKeyPress="solonumeros(event)" value="{{ old('mount_value') }}" placeholder="Monto a cambiar">
                             <input type="hidden" id="real_mount_value" name="real_mount_value" value="">
                             <div id="mount_value_error" class="talert" style='display: none;'>
@@ -137,6 +143,24 @@
                             <label for="mount_reference" id="label_mount_reference">Monto Referencial:</label>
                             <input disabled type="text" class="form-control" style="color: darkgreen; background-color: white" id="mount_reference" name="mount_reference" value="0.00" placeholder="Monto Referencial">
                             <input type="hidden" id="mount_reference2" name="mount_reference2" value="">
+                        </div>
+                    </div>
+                    <br>
+                    <div class="row">
+                        <div class="col-md-2 form-group">
+                            <label for="commission" class="form-label"><b>% Comisión:</b> </label>
+                            <input disabled class="form-control" style="color: red; background-color: white" type="text" id="commission" name="commission" value="" placeholder="% Comisión">
+                            <input type="hidden" id="real_commission" name="real_commission" value="">
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label for="amount_withheld" class="form-label" id="label_amount_withheld"><b>Retención:</b> </label>
+                            <input disabled class="form-control" style="color:blue; background-color: white" type="text" id="amount_withheld" name="amount_withheld" value="0.00" placeholder="Retención">
+                            <input type="hidden" id="real_amount_withheld" name="real_amount_withheld" value="">
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label for="net_amount" id="label_net_amount">Monto a enviar a Canawil:</label>
+                            <input disabled type="text" class="form-control" style="color:darkgreen; background-color: white" id="net_amount" name="net_amount" value="0.00" placeholder="Monto a enviar">
+                            <input type="hidden" id="net_amount2" name="net_amount2" value="">
                         </div>
                     </div>
                 </div>
@@ -277,24 +301,33 @@
                             <div id="canawilbank_id_error" class="talert" style='display: none;'>
                                 <p class="text-danger">El Banco de Canawil es requerido</p>
                             </div>
+                            <div id="credit_error2" class="talert" style='display: none;'>
+                                <p class="text-danger">Debe escoger la opción "transacción a crédito"</p>
+                            </div>
                         </div>
-                        <div class="col-md-3 form-group">
+                        <div class="col-md-4 form-group">
                             <label for="canawil_account_number" class="form-label"><b>Cuenta:</b></label>
                             <input disabled class="form-control" type="text" id="canawil_account_number" name="canawil_account_number" value="" placeholder="Cuenta">
                         </div>
-                        <div class="col-md-3 form-group">
-                            <label for="waytopay_id" class="form-label"><b>Medio para el envío:</b></label>
-                            <select id="waytopay_id" name="waytopay_id" class="form-control" onchange="getWay(this.value)" onclick="quitaMensaje()">
-                                <option value="">Seleccionar</option>
-                            </select>
-                            <div id="waytopay_id_error" class="talert" style='display: none;'>
-                                <p class="text-danger">El Medio para el envío es requerido</p>
+                        <div class="col-md-4 form-group">
+                            <label for="send_way" class="form-label"><b>Medio para el envío:</b></label>
+                            <input disabled class="form-control" type="text" id="send_way" name="send_way" value="" placeholder="Medio para el envío">
+                        </div>
+                    </div>
+                    @if ($credit == 'Y')
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="" id="creditcash" name="creditcash">
+                                    <label class="form-check-label" style="color:red" for="creditcash">
+                                        <b>Pagar de contado esta transacción</b>
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-2 form-group">
-                            <label for="waytopay_reference" class="form-label" id="label_reference"><b>Referencia:</b></label>
-                            <input class="form-control" type="text" id="waytopay_reference" name="waytopay_reference" value="" placeholder="Referencia">
-                        </div>
+                    @endif
+                    <div id="credit_error" class="talert" style='display: none;'>
+                        <p class="text-danger">Debe hacer esta transacción de contado, porque sobrepasa el límite de su crédito</p>
                     </div>
                     <br>
                     <div class="col-md-12 form-group">
@@ -519,7 +552,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 
@@ -688,6 +721,7 @@
 
     function showAccount(jsondata){
         let account_number = jsondata.account_number;
+        let description = jsondata.description;
 
         if (account_number.length > 4) {
             // Obtener los últimos 4 dígitos
@@ -697,18 +731,8 @@
             // Mostrar el valor enmascarado en el input
             document.getElementById("canawil_account_number").value = enmascarado;
         }
-    }
 
-    function getWay(xid){
-        fetch(`/way/${xid}`)
-            .then(response => response.json())
-            .then(jsondata => showWay(jsondata))
-    }
-
-    function showWay(jsondata){
-        let reference = jsondata.reference;
-
-        $("#label_reference").text(reference + ':');
+        document.getElementById("send_way").value = description;
     }
 
     function solonumeros(event){
@@ -887,8 +911,9 @@
         let country2_id = jsondata.country2_id;
         let phonecode = jsondata.phone_code;
         let two_decimals = jsondata.two_decimals;
+        let commission = jsondata.commission;
+        let role_name = jsondata.role_name;
         let data1 = jsondata.canawil_banks;
-        let data2 = jsondata.way_to_pays;
 
         let selectCanawilBank = document.getElementById('canawilbank_id');
         selectCanawilBank.innerHTML = ''; // Limpiar contenido anterior
@@ -899,15 +924,6 @@
         defaultOption.text = 'Seleccionar';
         selectCanawilBank.appendChild(defaultOption);
 
-        let selectWaytoPay = document.getElementById('waytopay_id');
-        selectWaytoPay.innerHTML = ''; // Limpiar contenido anterior
-
-        // Crear y añadir una opción por defecto
-        let defaultOption2 = document.createElement('option');
-        defaultOption2.value = '';
-        defaultOption2.text = 'Seleccionar';
-        selectWaytoPay.appendChild(defaultOption2);
-
         // Recorrer el array y crear opciones
         data1.forEach(bank => {
             let option = document.createElement('option');
@@ -916,18 +932,15 @@
             selectCanawilBank.appendChild(option);
         });
 
-        data2.forEach(way => {
-            let option2 = document.createElement('option');
-            option2.value = way.id;  // Asumiendo que el id está en la propiedad 'id'
-            option2.text = way.description;  // Asumiendo que el nombre del estado está en la propiedad 'name'
-            selectWaytoPay.appendChild(option2);
-        });
-
         document.getElementById("phonecode").value = phonecode;
         document.getElementById("country2_id").value = country2_id;
+        document.getElementById("currency").value = currency;
+        document.getElementById("symbol").value = symbol;
         document.getElementById("symbol2").value = symbol2;
         document.getElementById("symbol3").value = symbol3;
         document.getElementById("conversion_description").value = conversion_description;
+        document.getElementById("real_commission").value = commission;
+        document.getElementById("commission").value = formatearConComaDecimal(parseFloat(commission)) + ' %';
         if (two_decimals === 'Y'){
             document.getElementById("conversion_value").value = formatearConComaDecimal(parseFloat(conversion_value)) + ' ' + currency;
             document.getElementById("reference_conversion_value").value = formatearConComaDecimal(parseFloat(reference_conversion_value)) + ' ' + symbol2;
@@ -940,11 +953,14 @@
             document.getElementById("real_reference_conversion_value").value = reference_conversion_value;
         }
         $('#mount_value').attr('placeholder', currency_description);
-        $('#label_mount_value').text('Monto a cambiar ' + currency + ' (*):');
+        $('#label_mount_value').text('Monto recibido en ' + currency + ' (*):');
         $('#label_conversion_value').text('Tasa de cambio ' + currency2 + ':');
-        $('#label_mount_change').text('Monto a pagar en ' + currency2 + ':');
+        $('#label_mount_change').text('Monto a cambiar en ' + currency2 + ':');
+        $('#label_net_amount').text('Monto a enviar en ' + currency + ':');
+        $('#label_send_amount').text('Monto a enviar en ' + currency + ':');
         $('#label_reference_conversion_value').text('Tasa Ref. ' + currency3 + ':');
         $('#label_mount_reference').text('Monto en ' + currency3 + ':');
+        $('#label_amount_withheld').text('Retención en ' + currency + ':');
         $('#mount_value').focus();
     }
 
@@ -985,15 +1001,28 @@
 
 
     function calcular(xvalor){
+        var currency = document.getElementById("currency").value;
+        var xsymbol = document.getElementById("symbol").value;
         var xsymbol2 = document.getElementById("symbol2").value;
         var xsymbol3 = document.getElementById("symbol3").value;
         var xconversion_value = parseFloat(document.getElementById("real_conversion_value").value);
         var xreference_conversion_value = parseFloat(document.getElementById("real_reference_conversion_value").value);
+        var xcommission = parseFloat(document.getElementById("real_commission").value);
+
+        // Calcular la comision del usuario sin formato
+        var mountCommissionValue = (xvalor * xcommission / 100).toFixed(2);
+        document.getElementById("amount_withheld").value = formatearNumeroSimple(mountCommissionValue) + ' ' + xsymbol;
+        document.getElementById("real_amount_withheld").value = mountCommissionValue;
+
+        // Formatear el valor calculado para mostrarlo
+        var mountNetValue = (xvalor - mountCommissionValue).toFixed(2);
+        var mountNetValueFormatted = formatearNumeroSimple(mountNetValue) + ' ' + xsymbol;
+        document.getElementById("net_amount").value = mountNetValueFormatted;
+        document.getElementById("net_amount2").value = mountNetValue;
 
         // Calcular el monto de cambio sin formato
         var mountChangeValue = (xvalor / xconversion_value).toFixed(2);
 
-        // Formatear el valor calculado para mostrarlo
         var mountChangeFormatted = formatearNumeroSimple(mountChangeValue) + ' ' + xsymbol2;
         document.getElementById("mount_change").value = mountChangeFormatted;
         document.getElementById("mount_change2").value = mountChangeValue;
@@ -1002,8 +1031,8 @@
         var mountReferenceValue = (mountChangeValue / xreference_conversion_value).toFixed(2);
 
         // Formatear el valor calculado para mostrarlo
-        var mountReferenceFormatted = formatearNumeroSimple(mountReferenceValue) + ' ' + xsymbol3;
-        document.getElementById("mount_reference").value = mountReferenceFormatted;
+        var mountReferenceFormatted = formatearNumeroSimple(mountReferenceValue);
+        document.getElementById("mount_reference").value = mountReferenceFormatted  + ' ' + xsymbol3;
         document.getElementById("mount_reference2").value = mountReferenceValue;
     }
 
@@ -1279,15 +1308,37 @@
                 document.getElementById("totalphone").value = totalphone;
             }
         }
+        var xcredit = document.getElementById("credit").value;
         var xcanawilbank_id = document.getElementById("canawilbank_id").value;
         if (xcanawilbank_id.length < 1){
             xseguir = false;
             document.getElementById("canawilbank_id_error").style.display = "block";
         }
-        var xwaytopay_id = document.getElementById("waytopay_id").value;
-        if (xwaytopay_id.length < 1){
-            xseguir = false;
-            document.getElementById("waytopay_id_error").style.display = "block";
+        if (document.getElementById('creditcash')){
+            let xcreditcash = document.getElementById('creditcash');
+            // Verificar si el checkbox está marcado
+            if (xcreditcash.checked) {
+                document.getElementById("credit_value").value = 'Y';
+            } else {
+                var xcredit_limit = parseFloat(document.getElementById("credit_limit").value);
+                var xtotal_debt = parseFloat(document.getElementById("total_debt").value);
+                var xnet_amount2 = parseFloat(document.getElementById("net_amount2").value);
+                var xsumacredito = xnet_amount2 + xtotal_debt;
+                if (xcredit == 'Y'){
+                    if (xcredit_limit < xsumacredito){
+                        xseguir = false;
+                        document.getElementById("credit_error").style.display = "block";
+                    } else {
+                        const selectElement = document.getElementById('canawilbank_id');
+                        const selectedOption = selectElement.options[selectElement.selectedIndex].text;
+                        if (!selectedOption.toLowerCase().includes('crédito')){
+                            xseguir = false;
+                            document.getElementById("credit_error2").style.display = "block";
+                        }
+                    }
+                }
+                document.getElementById("credit_value").value = 'N';
+            }
         }
         if (xseguir){
             let checkbox = document.getElementById('favorite');

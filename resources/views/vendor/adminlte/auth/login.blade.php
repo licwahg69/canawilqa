@@ -2,6 +2,32 @@
 
 @section('adminlte_css_pre')
     <link rel="stylesheet" href="{{ asset('vendor/icheck-bootstrap/icheck-bootstrap.min.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+@stop
+
+@section('css')
+    <style>
+        /* Ajustar el tamaño del botón a solo el icono */
+        #togglePassword {
+            background-color: transparent; /* Sin fondo */
+            border-left: none; /* Sin bordes en el botón */
+            border-right: none; /* Sin bordes en el botón */
+            cursor: pointer;
+        }
+
+        /* Cambia el color del ícono al pasar el mouse */
+        #togglePassword:hover {
+            color: #343a40;
+        }
+
+        #input-group-mb-3 #togglePassword {
+            border-color: rgb(206, 212, 218); /* Color por defecto */
+        }
+
+        #input-group-mb-3:focus-within #togglePassword {
+            border-color:rgb(128,189,255);
+        }
+    </style>
 @stop
 
 @php( $login_url = View::getSection('login_url') ?? config('adminlte.login_url', 'login') )
@@ -24,7 +50,6 @@
     {{--<form action="{{ $login_url }}" method="post">--}}
     <form action="/login2" method="post">
         @csrf
-
         {{-- Email field --}}
         <div class="input-group mb-3">
             <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
@@ -44,10 +69,21 @@
         </div>
 
         {{-- Password field --}}
-        <div class="input-group mb-3">
-            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
+        <div id="input-group-mb-3" class="input-group mb-3">
+            <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror"
                    placeholder="{{ __('adminlte::adminlte.password') }}">
-
+            {{--
+            <div class="input-group-append">
+                <div class="input-group-text">
+                    <span class="fas fa-lock {{ config('adminlte.classes_auth_icon', '') }}"></span>
+                </div>
+            </div>
+            --}}
+            <div class="input-group-append">
+                <a href="#" class="btn btn-default" id="togglePassword">
+                    <span id="toggleIcon" class="fa fa-eye fa-xs {{ config('adminlte.classes_auth_icon', '') }}"></span> <!-- Cambia el ícono según el estado -->
+                </a>
+            </div>
             <div class="input-group-append">
                 <div class="input-group-text">
                     <span class="fas fa-lock {{ config('adminlte.classes_auth_icon', '') }}"></span>
@@ -84,6 +120,7 @@
         </div>
 
     </form>
+
 @stop
 
 @section('auth_footer')
@@ -106,6 +143,34 @@
         </p>
     @endif
     --}}
+@stop
+
+{{-- Incluir el script para mostrar/ocultar contraseña --}}
+@section('js')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordField = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+
+            if (togglePassword && passwordField && toggleIcon) {
+                togglePassword.addEventListener('click', function (e) {
+                    if (passwordField.type === 'password') {
+                        passwordField.type = 'text';
+                        toggleIcon.classList.remove('fa-eye');
+                        toggleIcon.classList.add('fa-eye-slash');
+                    } else {
+                        passwordField.type = 'password';
+                        toggleIcon.classList.remove('fa-eye-slash');
+                        toggleIcon.classList.add('fa-eye');
+                    }
+                    // Restablece el foco y la posición del cursor
+                    passwordField.focus();
+                    passwordField.setSelectionRange(cursorPosition, cursorPosition);
+                });
+            }
+        });
+    </script>
 @stop
 
 

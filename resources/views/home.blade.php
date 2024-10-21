@@ -32,6 +32,6 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, <label>todos los derechos reservados.</label>
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, <label>todos los derechos reservados.</label>
 </div>
 @stop

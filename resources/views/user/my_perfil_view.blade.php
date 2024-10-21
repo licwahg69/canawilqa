@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Editar mi perfil')
+@section('title', 'Editar perfil')
 
 @section('content_header')
-    <h1 class="m-0 text-primary text-center"><b>Consultar perfil: </b><label class="text-dark">{{$users->name}}</label></h1>
+    <h1 class="m-0 text-primary text-center"><b>Editar perfil: </b><label class="text-dark">{{$users->name}}</label></h1>
 @stop
 
 @section('css')
@@ -56,7 +56,7 @@
     @csrf
     <input type="hidden" id="user_id" name="user_id" value="{{$users->id}}">
     <input type="hidden" id="photo_path" name="photo_path" value="{{ $users->profile_photo_path }}">
-    <input type="hidden" id="toaction" name="toaction" value="update">
+    <input type="hidden" id="toaction" name="toaction" value="update2">
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -178,8 +178,32 @@
                         </div>
                     </div>
                     <div class="row">
+                        <div class="col-md-2 form-group">
+                            <label for="credit" class="form-label"><b>Tiene Cédito:</b> </label>
+                            <select id="credit" name="credit" class="select2 form-control">
+                                @if ($users->credit == 'Y')
+                                    <option value="Y" selected>SI</option>
+                                    <option value="N">NO</option>
+                                @else
+                                    <option value="Y">SI</option>
+                                    <option value="N" selected>NO</option>
+                                @endif
+                            </select>
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label for="credit_limit">Limite del crédito:</label>
+                            <input type="text" class="form-control" id="credit_limit" name="credit_limit" onkeydown="quitaMensaje()" onKeyPress="solonumeros(event)" value="{{ old('credit_limit') ?? $users->credit_limit ?? old('credit_limit') }}" placeholder="Limite del crédito">
+                            <div id="credit_limit_error" class="talert" style='display: none;'>
+                                <p class="text-danger">Debe indicar un limite de crédito</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
                         <div class="col-md-2 form-group text-center">
-                            <a href="/user" class="btn btn-secondary btn-block" tabindex="5">Volver  <i class="fa fa-arrow-circle-left"></i></a>
+                            <button type="button" onclick="validar()" class="btn btn-success btn-block" tabindex="6">Guardar  <i class="fa fa-save"></i></button>
+                        </div>
+                        <div class="col-md-2 form-group text-center">
+                            <a href="/user" class="btn btn-secondary btn-block">Cancelar  <i class="fa fa-arrow-circle-left"></i></a>
                         </div>
                     </div>
                 </div>
@@ -195,6 +219,56 @@
 
 @section('footer')
 <div id="copyrigth" class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
+@stop
+
+
+@section('js')
+<script>
+    function quitaMensaje(){
+        $(".talert").css("display", "none");
+    }
+
+    function solonumeros(event){
+            key = event.keyCode || event.which;
+            tecla = String.fromCharCode(key).toLowerCase();
+
+            letras = "1234567890";
+
+            especiales = [8,13,37,39,46,116];
+            tecla_especial = false;
+            for(var i in especiales){
+            if(key == especiales[i]){
+                tecla_especial = true;
+                break;
+            }
+            }
+
+            if(letras.indexOf(tecla) ==-1 && (tecla_especial == false)){
+            event.preventDefault();
+            }
+        }
+
+    function validar(){
+        var xseguir = true;
+        var xcredit = document.getElementById("credit").value;
+        if  (xcredit  === 'Y'){
+            var xcredit_limit = document.getElementById("credit_limit").value;
+            if  (xcredit_limit.length < 1 || xcredit_limit.value == 0.00){
+                xseguir = false;
+                document.getElementById("credit_limit_error").style.display = "block";
+            } else {
+                if (parseFloat(xcredit_limit, 10) <= 0){
+                    xseguir = false;
+                    document.getElementById("credit_limit_error").style.display = "block";
+                }
+            }
+        }
+        if (xseguir){
+            document.view.submit();
+        }
+    }
+</script>
+
 @stop

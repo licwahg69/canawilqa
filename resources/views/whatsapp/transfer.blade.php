@@ -16,6 +16,54 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.min.css">
 
         <link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico" />
+
+        <style type="text/css">
+            .containerimg2 {
+                width: 800px;
+                height: 500px;
+                margin-left: 130px;
+            }
+            .containerimg2 img {
+                width: 100%;
+                height: 100%;
+            }
+            .containerimgver {
+                width: 400px;
+                height: 600px;
+                margin-left: 350px;
+            }
+            .containerimgver img {
+                width: 100%;
+                height: 100%;
+            }
+            .containerimgcua {
+                width: 500px;
+                height: 500px;
+                margin-left: 300px;
+            }
+            .containerimgcua img {
+                width: 100%;
+                height: 100%;
+            }
+
+            @media (max-width: 768px) {
+                .containerimg2 {
+                    width: 250px;
+                    height: 200px;
+                    margin-left: 25px;
+                }
+                .containerimgver {
+                    width: 220px;
+                    height: 350px;
+                    margin-left: 40px;
+                }
+                .containerimgcua {
+                    width: 250px;
+                    height: 250px;
+                    margin-left: 25px;
+                }
+            }
+        </style>
     </head>
 
     <body>
@@ -23,7 +71,7 @@
             <div class="container-fluid">
                 <a href="#">
                     <img src="/checkicon.png" alt="" width="100" height="95">
-                    <h4 style="color: #0b0611"><label class="text-start">CANAWIL Cambios</label></h4>
+                    <h4 style="color: #0b0611"><label class="text-start">Cambios CANAWIL</label></h4>
                 </a>
             </div>
         </nav>
@@ -39,6 +87,13 @@
                             <b> Datos de la Transacción <label class="text-danger"> (Estatus: <i class="fas fa-traffic-light"></i> Transferido)</label></b>
                         </div>
                         <div class="card-body">
+                            <h4 style="color: blue">Transacción</h4>
+                            <div class="row">
+                                <div class="col-md-12 form-group">
+                                    <label for="comercial_name" class="form-label"><b>Cliente:</b></label>
+                                    <input disabled class="form-control" type="text" id="comercial_name" name="comercial_name" value="{{$transfers[0]->comercial_name}}">
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-md-2 form-group">
                                     <label for="transaction_id" class="form-label"><b>ID Transacción:</b></label>
@@ -61,7 +116,7 @@
                                 </div>
                                 <div class="col-md-2 form-group">
                                     <label for="conversion_value" id="label_conversion_value"><b>Tasa de cambio {{$transfers[0]->currency2}}:</b></label>
-                                    <input disabled type="text" class="form-control text-right" style="color: red; background-color: white" id="conversion_value" name="conversion_value" value="{{$transfers[0]->two_decimals == 'Y' ? number_format($transfers[0]->conversion_value, 2).' '.$transfers[0]->currency : $transfers[0]->conversion_value.' '.$transfers[0]->currency}}">
+                                    <input disabled type="text" class="form-control text-right" style="color: red; background-color: white" id="conversion_value" name="conversion_value" value="{{$transfers[0]->two_decimals == 'Y' ? number_format($transfers[0]->conversion_value,2,',','.').' '.$transfers[0]->currency : $transfers[0]->conversion_value.' '.$transfers[0]->currency}}">
                                 </div>
                                 <div class="col-md-3 form-group">
                                     <label for="mount_change" id="label_mount_change"><b>Monto a pagar {{$transfers[0]->currency2}}:</b></label>
@@ -69,7 +124,7 @@
                                 </div>
                                 <div class="col-md-2 form-group">
                                     <label for="reference_conversion_value" id="label_reference_conversion_value"><b>Tasa Ref. {{$transfers[0]->currency3}}:</b></label>
-                                    <input disabled type="text" class="form-control text-right" style="color: red; background-color: white" id="reference_conversion_value" name="reference_conversion_value" value="{{$transfers[0]->two_decimals == 'Y' ? number_format($transfers[0]->reference_conversion_value, 2).' '.$transfers[0]->currency2 : $transfers[0]->reference_conversion_value.' '.$transfers[0]->currency2}}">
+                                    <input disabled type="text" class="form-control text-right" style="color: red; background-color: white" id="reference_conversion_value" name="reference_conversion_value" value="{{$transfers[0]->two_decimals == 'Y' ? number_format($transfers[0]->reference_conversion_value,2,',','.').' '.$transfers[0]->currency2 : $transfers[0]->reference_conversion_value.' '.$transfers[0]->currency2}}">
                                 </div>
                                 <div class="col-md-2 form-group">
                                     <label for="mount_reference" id="label_mount_reference"><b>Monto Ref. {{$transfers[0]->currency3}}:</b></label>
@@ -77,6 +132,7 @@
                                 </div>
                             </div>
                             <br>
+                            <h4 style="color: blue">Cuenta</h4>
                             <div class="row">
                                 <div class="col-md-4 form-group">
                                     <label for="doc_description" class="form-label"><b>Tipo de Documento:</b></label>
@@ -102,7 +158,15 @@
                                     <input disabled class="form-control height" type="text" id="account_number" name="account_number" value="{{$transfers[0]->account_number}}">
                                 </div>
                             </div>
-                            <br>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-dollar-sign"></i> <b>Datos de la transferencia</b>
+                        </div>
+                        <div class="card-body">
+                            <h4 style="color: red">Pago</h4>
                             <div class="row">
                                 <div class="col-md-8 form-group">
                                     <label for="payer" class="form-label"><b>Nombre del pagador:</b></label>
@@ -117,128 +181,102 @@
                                     </div>
                                 </div>
                             </div>
-                            <br>
-                            <hr>
-                            @if ($transfers[0]->role == 'ALI')
-                                <h5 style="color: blue"><b>Datos de la transferencia del Aliado Comercial: <label style="color:black">{{$transfers[0]->comercial_name}}</label></b></h5>
-                            @else
-                                <h5 style="color: blue"><b>Datos de la transferencia del Usuario: <label style="color:black">{{$transfers[0]->comercial_name}}</label></b></h5>
-                            @endif
-
-                            <hr>
-                            <br>
                             <div class="row">
-                                <div class="col-md-4 form-group">
-                                    <label for="canawil_bank_name" class="form-label"><b>{{ trim($transfers[0]->mount_value_fm) }}{{ trim($transfers[0]->symbol) }} {{ trim($transfers[0]->currency) }} transferidos a:</b></label>
-                                    <input disabled class="form-control" type="text" id="canawil_bank_name" name="canawil_bank_name" value="{{$transfers[0]->canawil_bank_name}}">
-                                </div>
-                                <div class="col-md-3 form-group">
-                                    <label for="canawil_account_number" class="form-label"><b>Cuenta:</b></label>
-                                    <input disabled class="form-control" type="text" id="canawil_account_number" name="canawil_account_number" value="{{$transfers[0]->canawil_account_number}}">
-                                </div>
-                                <div class="col-md-3 form-group">
-                                    <label for="waytopay_description" class="form-label"><b>Medio usado para el envío:</b></label>
-                                    <input disabled class="form-control" type="text" id="waytopay_description" name="waytopay_description" value="{{$transfers[0]->waytopay_description}}">
-                                </div>
-                                <div class="col-md-2 form-group">
-                                    <label for="waytopay_reference" class="form-label"><b>{{$transfers[0]->reference_text}}:</b></label>
-                                    <input disabled class="form-control" type="text" id="waytopay_reference" name="waytopay_reference" value="{{$transfers[0]->waytopay_reference}}">
-                                </div>
-                            </div>
-                            <br>
-                            <div class="card">
-                                <div class="card-header"><i class="fas fa-camera"></i>
-                                    <b> Foto de la transacción bancaria</b>
-                                </div>
-                                <div class="card-body">
-                                    <div class="panel-body text-center" id='imgfoto'>
-                                        <div class="row">
-                                            <div class="col-md-12 form-group text-center" id="foto_web" style='display: none;'>
-                                                @switch($transfers[0]->transaction_image_orientation)
-                                                    @case('VER')
-                                                        <img width='350' height='600' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->bank_image}}" />
-                                                        @break
-                                                    @case('CUA')
-                                                        <img width='400' height='400' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->bank_image}}" />
-                                                        @break
-                                                    @case('HOR')
-                                                        <img width='600' height='300' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->bank_image}}" />
-                                                        @break
-                                                @endswitch
-                                            </div>
-                                            <div class="col-md-12 form-group text-center" id="foto_mobile" style='display: none;'>
-                                                @switch($transfers[0]->transaction_image_orientation)
-                                                    @case('VER')
-                                                        <img width='350' height='600' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->bank_image}}" />
-                                                        @break
-                                                    @case('CUA')
-                                                        <img width='400' height='400' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->bank_image}}" />
-                                                        @break
-                                                    @case('HOR')
-                                                        <img width='500' height='200' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->bank_image}}" />
-                                                        @break
-                                                @endswitch
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <br>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">
-                            <i class="fas fa-dollar-sign"></i> <b>Datos de la transferencia</b>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-5 form-group">
-                                    <label for="canawil_bank_name" class="form-label"><b>Fondos transferidos desde el banco Canawil:</b></label>
-                                    <input disabled class="form-control" type="text" id="canawil_bank_name" name="canawil_bank_name" value="{{$transfers[0]->canawil_bank_name}}">
+                                <div class="col-md-8 form-group">
+                                    <label for="name_town" class="form-label"><b>Ciudad:</b></label>
+                                    <input disabled class="form-control" type="text" id="name_town" name="name_town" value="{{$transfers[0]->name_town}}">
                                 </div>
                                 <div class="col-md-4 form-group">
-                                    <label for="transfer_waytopay_description" class="form-label"><b>Tipo de pago a usado:</b></label>
-                                    <input disabled class="form-control" type="text" id="transfer_waytopay_description" name="transfer_waytopay_description" value="{{$transfers[0]->transfer_waytopay_description}}">
-                                </div>
-                                <div class="col-md-3 form-group">
-                                    <label for="transfer_waytopay_reference" class="form-label" id="label_reference"><b>{{$transfers[0]->transfer_reference_text}}:</b></label>
-                                    <input disabled class="form-control" type="text" id="transfer_waytopay_reference" name="transfer_waytopay_reference" value="{{$transfers[0]->transfer_waytopay_reference}}" placeholder="Referencia">
+                                    <label for="transfer_date" class="form-label"><b>Fecha de pago:</b></label>
+                                    <input disabled class="form-control" type="text" id="transfer_date" name="transfer_date" value="{{\Carbon\Carbon::parse($transfers2[0]->transfer_date)->format('d-m-Y')}}">
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <br>
                     <div class="card">
                         <div class="card-header"><i class="fas fa-camera"></i>
-                            <b> Foto de la transferencia bancaria realizada</b>
+                            <b> Foto(s) de la transferencia bancaria realizada</b>
                         </div>
                         <div class="card-body">
                             <div class="panel-body text-center" id='imgfoto'>
                                 <div class="row">
-                                    <div class="col-md-12 form-group text-center" id="foto_web2" style='display: none;'>
-                                        @switch($transfers[0]->transfer_image_orientation)
-                                            @case('VER')
-                                                <img width='350' height='600' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->transfer_bank_image}}" />
-                                                @break
-                                            @case('CUA')
-                                                <img width='400' height='400' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->transfer_bank_image}}" />
-                                                @break
-                                            @case('HOR')
-                                                <img width='600' height='300' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->transfer_bank_image}}" />
-                                                @break
-                                        @endswitch
-                                    </div>
-                                    <div class="col-md-12 form-group text-center" id="foto_mobile2" style='display: none;'>
-                                        @switch($transfers[0]->transfer_image_orientation)
-                                            @case('VER')
-                                                <img width='350' height='600' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->transfer_bank_image}}" />
-                                                @break
-                                            @case('CUA')
-                                                <img width='400' height='400' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->transfer_bank_image}}" />
-                                                @break
-                                            @case('HOR')
-                                                <img width='500' height='200' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transfers[0]->transfer_bank_image}}" />
-                                                @break
-                                        @endswitch
+                                    <div id="carousel1" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false" style="background-color: #b4b4b0; border-style:inset">
+                                        <div class="carousel-indicators">
+                                            @php
+                                                $switche=0;
+                                                $indicator=0;
+                                            @endphp
+                                            @foreach ($transfers2 as $transfer2)
+                                                @if ($switche==0)
+                                                    <button type="button" data-bs-target="#carousel1" data-bs-slide-to="{{$indicator}}" class="active" aria-current="true" aria-label="Slide {{$transfer2->transfer_bank_image}}"></button>
+                                                    @php
+                                                        $indicator++;
+                                                        $switche=1;
+                                                    @endphp
+                                                @else
+                                                    <button type="button" data-bs-target="#carousel1" data-bs-slide-to="{{$indicator}}" aria-label="Slide {{$transfer2->transfer_bank_image}}"></button>
+                                                    @php
+                                                        $indicator++;
+                                                    @endphp
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                        <div class="carousel-inner">
+                                            @php
+                                                $switche=0;
+                                            @endphp
+                                            @foreach ($transfers2 as $transfer2)
+                                                @if ($switche==0)
+                                                    @php
+                                                        $switche=1;
+                                                    @endphp
+                                                    @switch($transfer2->transfer_image_orientation)
+                                                        @case("HOR")
+                                                            <div class="containerimg2 carousel-item active">
+                                                                <img src="{{$transfer2->transfer_bank_image}}" class="d-block w-100" alt="Imagen...">
+                                                            </div>
+                                                            @break
+                                                        @case("VER")
+                                                            <div class="containerimgver carousel-item active">
+                                                                <img src="{{$transfer2->transfer_bank_image}}" class="d-block w-100" alt="Imagen...">
+                                                            </div>
+                                                            @break
+                                                        @case("CUA")
+                                                            <div class="containerimgcua carousel-item active">
+                                                                <img src="{{$transfer2->transfer_bank_image}}" class="d-block w-100" alt="Imagen...">
+                                                            </div>
+                                                            @break
+                                                    @endswitch
+                                                @else
+                                                    @switch($transfer2->transfer_image_orientation)
+                                                        @case("HOR")
+                                                            <div class="containerimg2 carousel-item">
+                                                                <img src="{{$transfer2->transfer_bank_image}}" class="d-block w-100" alt="Imagen...">
+                                                            </div>
+                                                            @break
+                                                        @case("VER")
+                                                            <div class="containerimgver carousel-item">
+                                                                <img src="{{$transfer2->transfer_bank_image}}" class="d-block w-100" alt="Imagen...">
+                                                            </div>
+                                                            @break
+                                                        @case("CUA")
+                                                            <div class="containerimgcua carousel-item">
+                                                                <img src="{{$transfer2->transfer_bank_image}}" class="d-block w-100" alt="Imagen...">
+                                                            </div>
+                                                            @break
+                                                    @endswitch
+                                                @endif
+                                            @endforeach
+                                        </div>
+                                        <button class="carousel-control-prev" type="button" data-bs-target="#carousel1" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Previous</span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button" data-bs-target="#carousel1" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Next</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -271,16 +309,6 @@
         </script>
         <script>
             $(document).ready(function() {
-                var xcuenta = document.getElementById("canawil_account_number").value;
-                if (xcuenta.length > 4) {
-                    // Obtener los últimos 4 dígitos
-                    let ultimos4 = xcuenta.slice(-4);
-                    // Reemplazar el resto con "x"
-                    let enmascarado = "X".repeat(xcuenta.length - 4) + ultimos4;
-                    // Mostrar el valor enmascarado en el input
-                    document.getElementById("canawil_account_number").value = enmascarado;
-                }
-
                 var xcuenta2 = document.getElementById("account_number").value;
                 if (xcuenta2.length > 4) {
                     // Obtener los últimos 4 dígitos
@@ -289,26 +317,6 @@
                     let enmascarado2 = "X".repeat(xcuenta2.length - 4) + xultimos4;
                     // Mostrar el valor enmascarado en el input
                     document.getElementById("account_number").value = enmascarado2;
-                }
-
-                var xcuenta3 = document.getElementById("transfer_waytopay_reference").value;
-                if (xcuenta3.length > 4) {
-                    // Obtener los últimos 4 dígitos
-                    let xxultimos4 = xcuenta3.slice(-4);
-                    // Reemplazar el resto con "x"
-                    let enmascarado3 = "X".repeat(xcuenta3.length - 4) + xxultimos4;
-                    // Mostrar el valor enmascarado en el input
-                    document.getElementById("transfer_waytopay_reference").value = enmascarado3;
-                }
-
-                var xcuenta4 = document.getElementById("waytopay_reference").value;
-                if (xcuenta4.length > 4) {
-                    // Obtener los últimos 4 dígitos
-                    let xxxultimos4 = xcuenta4.slice(-4);
-                    // Reemplazar el resto con "x"
-                    let enmascarado4 = "X".repeat(xcuenta4.length - 4) + xxxultimos4;
-                    // Mostrar el valor enmascarado en el input
-                    document.getElementById("waytopay_reference").value = enmascarado4;
                 }
             });
         </script>

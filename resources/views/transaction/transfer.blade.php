@@ -7,12 +7,33 @@
 @stop
 
 @section('content')
-<form action="/transaction" method="POST" id="view" name="view" class="formeli">
+<style>
+    #pasteArea {
+        border: 2px dashed #ccc;
+        width: 600px;
+        height: 300px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        margin-left: 50px;
+    }
+
+    #imagen {
+        display: none;
+        margin-top: 20px;
+    }
+</style>
+<form action="/transaction" method="POST" id="view" name="view" class="formeli" enctype="multipart/form-data">
     @csrf
     <input type="hidden" id="transaction_id" name="transaction_id" value="{{$transactions[0]->id}}">
+    <input type="hidden" id="amount_rest" name="amount_rest" value="{{$amount_rest}}">
     <input type="hidden" id="type_screen" name="type_screen" value="">
+    <input type="hidden" id="orientation" name="orientation" value="">
+    <input type="hidden" id="origin" name="origin" value="{{$origin}}">
+    <input type="hidden" id="imageData" name="imageData">
     <input type="hidden" id="payer_cellphone" name="payer_cellphone" value="{{$transactions[0]->cellphone}}">
-    <input type="hidden" id="toaction" name="toaction" value="save_transfer">
+    <input type="hidden" id="toaction" name="toaction" value="save_transfer_web">
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -63,24 +84,36 @@
                     </div>
                     <div class="row">
                         <div class="col-md-3 form-group">
-                            <label for="mount_value" id="label_mount_value">Monto a cambiar:</label>
+                            <label for="mount_value" id="label_mount_value">Monto recibido:</label>
                             <input disabled type="text" class="form-control text-right" id="mount_value" name="mount_value" value="{{ trim($transactions[0]->mount_value_fm) }}{{ trim($transactions[0]->symbol) }} {{ trim($transactions[0]->currency) }}">
                         </div>
                         <div class="col-md-2 form-group">
                             <label for="conversion_value" id="label_conversion_value">Tasa de cambio {{$transactions[0]->currency2}}:</label>
-                            <input disabled type="text" class="form-control text-right" style="color: red; background-color: white" id="conversion_value" name="conversion_value" value="{{$transactions[0]->two_decimals == 'Y' ? number_format($transactions[0]->conversion_value, 2).' '.$transactions[0]->currency : $transactions[0]->conversion_value.' '.$transactions[0]->currency}}">
+                            <input disabled type="text" class="form-control text-right" style="color: red; background-color: white" id="conversion_value" name="conversion_value" value="{{$transactions[0]->two_decimals == 'Y' ? number_format($transactions[0]->conversion_value,2,',','.').' '.$transactions[0]->currency : $transactions[0]->conversion_value.' '.$transactions[0]->currency}}">
                         </div>
                         <div class="col-md-3 form-group">
                             <label for="mount_change" id="label_mount_change">Monto a pagar {{$transactions[0]->currency2}}:</label>
                             <input disabled type="text" class="form-control text-right" style="color:darkgreen; background-color: white" id="mount_change" name="mount_change" value="{{ trim($transactions[0]->mount_change_fm).' '.$transactions[0]->symbol2 }}">
+                            <input type="hidden" id="real_mount_change" name="real_mount_change" value="{{trim($transactions[0]->mount_change)}}">
                         </div>
                         <div class="col-md-2 form-group">
                             <label for="reference_conversion_value" id="label_reference_conversion_value">Tasa Ref. {{$transactions[0]->currency3}}:</label>
-                            <input disabled type="text" class="form-control text-right" style="color: red; background-color: white" id="reference_conversion_value" name="reference_conversion_value" value="{{$transactions[0]->two_decimals == 'Y' ? number_format($transactions[0]->reference_conversion_value, 2).' '.$transactions[0]->currency2 : $transactions[0]->reference_conversion_value.' '.$transactions[0]->currency2}}">
+                            <input disabled type="text" class="form-control text-right" style="color: red; background-color: white" id="reference_conversion_value" name="reference_conversion_value" value="{{$transactions[0]->two_decimals == 'Y' ? number_format($transactions[0]->reference_conversion_value,2,',','.').' '.$transactions[0]->currency2 : $transactions[0]->reference_conversion_value.' '.$transactions[0]->currency2}}">
                         </div>
                         <div class="col-md-2 form-group">
                             <label for="mount_reference" id="label_mount_reference">Monto Ref. {{$transactions[0]->currency3}}:</label>
                             <input disabled type="text" class="form-control text-right" style="color: darkgreen; background-color: white" id="mount_reference" name="mount_reference" value="{{ trim($transactions[0]->mount_reference_fm).' '.$transactions[0]->symbol3 }}">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 form-group">
+                            <label for="amount_withheld" class="form-label" id="label_amount_withheld"><b>Retenido en {{ trim($transactions[0]->currency) }}:</b> </label>
+                            <input disabled class="form-control text-right" style="color:blue; background-color: white" type="text" id="amount_withheld" name="amount_withheld" value="{{$transactions[0]->amount_withheld_fm}}{{ trim($transactions[0]->symbol)}}" placeholder="Retención">
+                        </div>
+                        <div class="col-md-3 form-group">
+                            <label for="net_amount" id="label_net_amount">{{$transactions[0]->credit == 'Y' ? 'Pendiente por recibir ' : 'Monto recibido '}} en {{ trim($transactions[0]->currency) }}:</label>
+                            <input disabled type="text" class="form-control text-right" style="color:darkgreen; background-color: white" id="net_amount" name="net_amount" value="{{trim($transactions[0]->net_amount_fm)}}{{ trim($transactions[0]->symbol) }}" placeholder="Monto a enviar">
+                            <input type="hidden" id="net_amount2" name="net_amount2" value="">
                         </div>
                     </div>
                     <div class="row">
@@ -121,24 +154,22 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-4 form-group">
-                            <label for="canawil_bank_name" class="form-label"><b>{{ trim($transactions[0]->mount_value_fm) }}{{ trim($transactions[0]->symbol) }} {{ trim($transactions[0]->currency) }} transferidos a:</b></label>
-                            <input disabled class="form-control" type="text" id="canawil_bank_name" name="canawil_bank_name" value="{{$transactions[0]->canawil_bank_name}}">
+                    @if ($transactions[0]->credit == 'N')
+                        <div class="row">
+                            <div class="col-md-4 form-group">
+                                <b><label for="canawil_bank_name" class="form-label" style="color:blue">{{ trim($transactions[0]->net_amount_fm) }}{{ trim($transactions[0]->symbol) }} {{ trim($transactions[0]->currency) }}</label> transferidos a:</b>
+                                <input disabled class="form-control" type="text" id="canawil_bank_name" name="canawil_bank_name" value="{{$transactions[0]->canawil_bank_name}}">
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label for="canawil_account_number" class="form-label"><b>Cuenta:</b></label>
+                                <input disabled class="form-control" type="text" id="canawil_account_number" name="canawil_account_number" value="{{$transactions[0]->canawil_account_number}}">
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label for="send_way" class="form-label"><b>Medio para el envío:</b></label>
+                                <input disabled class="form-control" type="text" id="send_way" name="send_way" value="{{$transactions[0]->reference_text}}" placeholder="Medio para el envío">
+                            </div>
                         </div>
-                        <div class="col-md-3 form-group">
-                            <label for="canawil_account_number" class="form-label"><b>Cuenta:</b></label>
-                            <input disabled class="form-control" type="text" id="canawil_account_number" name="canawil_account_number" value="{{$transactions[0]->canawil_account_number}}">
-                        </div>
-                        <div class="col-md-3 form-group">
-                            <label for="waytopay_description" class="form-label"><b>Medio usado para el envío:</b></label>
-                            <input disabled class="form-control" type="text" id="waytopay_description" name="waytopay_description" value="{{$transactions[0]->waytopay_description}}">
-                        </div>
-                        <div class="col-md-2 form-group">
-                            <label for="waytopay_reference" class="form-label"><b>{{$transactions[0]->reference_text}}:</b></label>
-                            <input disabled class="form-control" type="text" id="waytopay_reference" name="waytopay_reference" value="{{$transactions[0]->waytopay_reference}}">
-                        </div>
-                    </div>
+                    @endif
                     <div class="card">
                         <div class="card-header"><i class="fas fa-camera"></i>
                             <b> Foto de la transacción bancaria</b>
@@ -149,26 +180,26 @@
                                     <div class="col-md-12 form-group text-center" id="foto_web" style='display: none;'>
                                         @switch($transactions[0]->transaction_image_orientation)
                                             @case('VER')
-                                                <img width='350' height='600' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
+                                                <img width='350' height='600' alt="" id="imagen2" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
                                                 @break
                                             @case('CUA')
-                                                <img width='400' height='400' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
+                                                <img width='400' height='400' alt="" id="imagen2" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
                                                 @break
                                             @case('HOR')
-                                                <img width='600' height='300' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
+                                                <img width='600' height='300' alt="" id="imagen2" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
                                                 @break
                                         @endswitch
                                     </div>
                                     <div class="col-md-12 form-group text-center" id="foto_mobile" style='display: none;'>
                                         @switch($transactions[0]->transaction_image_orientation)
                                             @case('VER')
-                                                <img width='350' height='600' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
+                                                <img width='350' height='600' alt="" id="imagen2" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
                                                 @break
                                             @case('CUA')
-                                                <img width='400' height='400' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
+                                                <img width='400' height='400' alt="" id="imagen2" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
                                                 @break
                                             @case('HOR')
-                                                <img width='500' height='200' alt="" id="imagen" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
+                                                <img width='500' height='200' alt="" id="imagen2" style="max-width: 100%; max-height: 100%;" src="{{$transactions[0]->bank_image}}" />
                                                 @break
                                         @endswitch
                                     </div>
@@ -184,35 +215,176 @@
                 </div>
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-5 form-group">
-                            <label for="canawilbank_id" class="form-label"><b>Transferir fondos desde el banco Canawil (*):</b></label>
-                            <select id="canawilbank_id" name="canawilbank_id" class="form-control" onclick="quitaMensaje()">
-                                <option value="">Seleccionar</option>
-                                @foreach ($canawil_banks as $canawil_bank)
-                                    <option value="{{$canawil_bank->id}}">{{$canawil_bank->bank_name}} {{$canawil_bank->account_number}}</option>
-                                @endforeach
-                            </select>
-                            <div id="canawilbank_id_error" class="talert" style='display: none;'>
-                                <p class="text-danger">El banco de Canawil es requerido</p>
+                        @if ($amount_rest > 0)
+                            <div class="col-md-6 form-group">
+                                <div class="row">
+                                    <div class="col-md-12 form-group">
+                                        <label for="currencybank_id" class="form-label"><b>Transferir desde el banco destino (*):</b></label>
+                                        <select id="currencybank_id" name="currencybank_id" class="form-control" onchange="getAvailable(this.value)" onclick="quitaMensaje()">
+                                            <option value="">Seleccionar</option>
+                                            @foreach ($currency_banks as $currency_bank)
+                                                <option value="{{$currency_bank->id}}">{{$currency_bank->bankname}} {{$currency_bank->account_number}}</option>
+                                            @endforeach
+                                        </select>
+                                        <div id="currencybank_id_error" class="talert" style='display: none;'>
+                                            <p class="text-danger">El banco destino es requerido</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label for="available_amount" id="label_available_amount">Monto disponible en {{$transactions[0]->currency2}}({{$transactions[0]->symbol2}}):</label>
+                                        <input disabled type="text" class="form-control text-right" style="color:darkgreen; background-color: white" id="available_amount" name="available_amount" value="" placeholder="Monto disponible">
+                                        <input type="hidden" id="real_available_amount" name="real_available_amount" value="">
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label for="amount" id="label_amount">Monto a transferir en {{$transactions[0]->currency2}}({{$transactions[0]->symbol2}}) (*):</label>
+                                        <input type="text" class="form-control text-right" style="color:darkgreen; background-color: white" id="amount" name="amount" value="{{number_format(trim($sumamount_rest), 2, ',', '.')}}" oninput="procesarValor(this)" onkeypress="quitaMensaje()" placeholder="Monto a transferir">
+                                        <input type="hidden" id="real_amount" name="real_amount" value="{{$sumamount_rest}}">
+                                    </div>
+                                    <div id="amount_error" class="talert" style='display: none;'>
+                                        <p class="text-danger">El Monto a transferir es requerido</p>
+                                    </div>
+                                    <div id="amount_error2" class="talert" style='display: none;'>
+                                        <p class="text-danger">El Monto a transferir no puede ser mayor que el monto disponible</p>
+                                    </div>
+                                    <div id="amount_error3" class="talert" style='display: none;'>
+                                        <p class="text-danger">El Monto a transferir no puede ser mayor que la totalidad del monto a enviar</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-4 form-group">
-                            <label for="waytopay_id" class="form-label"><b>Tipo de pago a usar (*):</b></label>
-                            <select id="waytopay_id" name="waytopay_id" class="form-control" onchange="getWay(this.value)" onclick="quitaMensaje()">
-                                <option value="">Seleccionar</option>
-                                @foreach ($way_to_pays as $way_to_pay)
-                                    <option value="{{$way_to_pay->id}}">{{$way_to_pay->description}}</option>
-                                @endforeach
-                            </select>
-                            <div id="waytopay_id_error" class="talert" style='display: none;'>
-                                <p class="text-danger">El Tipo de pago a usar es requerido</p>
+                            <div class="col-md-6 form-group">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="fas fa-terminal"></i> <b>Transferencias Realizadas</b>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12 form-group">
+                                                <table class="table table-striped table-bordered display responsive nowrap">
+                                                    <thead class="bg-dark text-white">
+                                                        <tr>
+                                                            <th class="text-center">Banco</th>
+                                                            <th class="text-center">Número de cuenta</th>
+                                                            <th class="text-center">Monto Enviado</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach ($transfers as $transfer)
+                                                            <tr>
+                                                                <td class="text-left">
+                                                                    <label>{{$transfer->currency_bankname}}</label>
+                                                                </td>
+                                                                <td class="text-left">
+                                                                    <label>{{$transfer->transfer_account_number}}</label>
+                                                                </td>
+                                                                <td class="text-right">
+                                                                    <label>{{trim($transfer->transfer_amount_fm)}}</label>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-3 form-group">
-                            <label for="waytopay_reference" class="form-label" id="label_reference"><b>Referencia:</b></label>
-                            <input class="form-control" type="text" id="waytopay_reference" name="waytopay_reference" value="" placeholder="Referencia">
+                        @else
+                            <div class="col-md-12 form-group">
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label for="currencybank_id" class="form-label"><b>Transferir desde el banco destino (*):</b></label>
+                                        <select id="currencybank_id" name="currencybank_id" class="form-control" onchange="getAvailable(this.value)" onclick="quitaMensaje()">
+                                            <option value="">Seleccionar</option>
+                                            @foreach ($currency_banks as $currency_bank)
+                                                <option value="{{$currency_bank->id}}">{{$currency_bank->bankname}} {{$currency_bank->account_number}}</option>
+                                            @endforeach
+                                        </select>
+                                        <div id="currencybank_id_error" class="talert" style='display: none;'>
+                                            <p class="text-danger">El banco destino es requerido</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label for="available_amount" id="label_available_amount">Monto disponible en {{$transactions[0]->currency2}}({{$transactions[0]->symbol2}}):</label>
+                                        <input disabled type="text" class="form-control text-right" style="color:darkgreen; background-color: white" id="available_amount" name="available_amount" value="" placeholder="Monto disponible">
+                                        <input type="hidden" id="real_available_amount" name="real_available_amount" value="">
+                                    </div>
+                                    <div class="col-md-3 form-group">
+                                        <label for="amount" id="label_amount">Monto a transferir en {{$transactions[0]->currency2}}({{$transactions[0]->symbol2}}) (*):</label>
+                                        <input type="text" class="form-control text-right" style="color:darkgreen; background-color: white" id="amount" name="amount" value="{{number_format(trim($sumamount_rest), 2, ',', '.')}}" oninput="procesarValor(this)" onkeypress="quitaMensaje()" placeholder="Monto a transferir">
+                                        <input type="hidden" id="real_amount" name="real_amount" value="{{$sumamount_rest}}">
+                                    </div>
+                                    <div id="amount_error" class="talert" style='display: none;'>
+                                        <p class="text-danger">El Monto a transferir es requerido</p>
+                                    </div>
+                                    <div id="amount_error2" class="talert" style='display: none;'>
+                                        <p class="text-danger">El Monto a transferir no puede ser mayor que el monto disponible</p>
+                                    </div>
+                                    <div id="amount_error3" class="talert" style='display: none;'>
+                                        <p class="text-danger">El Monto a transferir no puede ser mayor que la totalidad del monto a enviar</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header"><i class="fas fa-desktop"></i>
+                                    <b> Agregar capture de la transacción bancaria hecha usando Win + Shift + S (*)</b>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <div class="row">
+                                            <div class="col-md-2 form-group">
+                                            </div>
+                                            <div class="col-md-8 form-group">
+                                                <!-- Div donde se pegará la imagen -->
+                                                <div id="pasteArea">
+                                                    Pega aquí tu imagen (Ctrl + V)
+                                                </div>
+
+                                                <!-- Imagen pegada será mostrada aquí -->
+                                                <img id="imagen" />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12 form-group">
+                                                <label class="control-label">Nombre del Archivo:</label>
+                                                <input readonly class="form-control" type="text" id="linkaddress_i"
+                                                    name="linkaddress_i" value="" maxlength='250'>
+                                                <div id="transaction_error" class="talert" style='display: none;'>
+                                                    <p class="text-danger">Debe hacer un capture para guardarla con la transacción</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    <br>
+                    <div class="col-md-12 form-group">
+                        <b>(*) Campos obligatorios</b>
+                    </div>
+                    <br>
+                    <div class="row">
+                        <div class="col-md-2 form-group text-center">
+                            <button type="button" id="buttongrabar" onclick="grabar()" class="btn btn-primary btn-block">Grabar  <i class="fa fa-save"></i></button>
+                        </div>
+                        @if ($origin == 'transaction')
+                            <div class="col-md-2 form-group text-center">
+                                <a href="/transaction" class="btn btn-secondary btn-block">Regresar  <i class="fa fa-arrow-circle-left"></i></a>
+                            </div>
+                        @else
+                            <div class="col-md-2 form-group text-center">
+                                <a href="/proccess" class="btn btn-secondary btn-block">Regresar  <i class="fa fa-arrow-circle-left"></i></a>
+                            </div>
+                        @endif
+
+                    </div>
+                    <hr>
                     <div class="row">
                         <div class="col-md-12 form-group">
                             <label for="whatsapp_message">Puede enviar un mensaje de WhatsApp al pagador de esta transacción si lo desea:</label>
@@ -230,24 +402,6 @@
                             <button type="button" id="buttongrabar" onclick="sendMessage()" class="btn btn-success btn-block">Enviar Mensaje <i class="bi bi-whatsapp"></i></button>
                         </div>
                     </div>
-                    <br>
-                    <div class="col-md-12 form-group">
-                        <b>(*) Campos obligatorios</b>
-                    </div>
-                    <br>
-                    <div class="row">
-                        <div class="col-md-2 form-group text-center">
-                            <button type="button" id="buttongrabar" onclick="validar()" class="btn btn-primary btn-block">Guardar  <i class="fa fa-save"></i></button>
-                        </div>
-                        <div class="col-md-2 form-group text-center">
-                            <a href="/transaction" class="btn btn-danger btn-block">Cancelar  <i class="fa fa-arrow-circle-left"></i></a>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12 form-group">
-                            <label style="color: red; font-weight:bold; font-size:20px"><b>Nota: Tome un capture de pantalla de la transacción bancaria hecha para transferir el pago y tengala a la mano. Le será solicitada.</b></label>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -261,7 +415,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 
@@ -280,19 +434,136 @@
     });
 </script>
 <script>
+    // Función para ajustar la imagen pegada, calcular su orientación y tamaño
+    function ajustarImagen(imgSrc) {
+        var linkadress = document.getElementById('linkaddress_i');
+        var imagen = document.getElementById('imagen');
+        var img = new Image();
+        img.src = imgSrc;
+
+        img.onload = function() {
+            var width = img.width;
+            var height = img.height;
+
+            var aspectRatioWidth = width / height;
+            var aspectRatioHeight = height / width;
+
+            var orientation;
+            if (Math.abs(aspectRatioWidth - aspectRatioHeight) < 0.3) {
+                orientation = 'CUA';  // Cuadrada
+            } else if (aspectRatioWidth > aspectRatioHeight) {
+                orientation = 'HOR';  // Horizontal
+            } else {
+                orientation = 'VER';  // Vertical
+            }
+
+            document.getElementById("orientation").value = orientation;
+
+            // Ajustar tamaño según la orientación
+            imagen.src = imgSrc;
+            switch (orientation) {
+                case 'VER':
+                    imagen.style.width = "350px";
+                    imagen.style.height = "600px";
+                    imagen.style.marginLeft= "150px";
+                    break;
+                case 'CUA':
+                    imagen.style.width = "400px";
+                    imagen.style.height = "400px";
+                    imagen.style.marginLeft= "130px";
+                    break;
+                case 'HOR':
+                    imagen.style.width = "600px";
+                    imagen.style.height = "300px";
+                    imagen.style.marginLeft= "50px";
+                    break;
+            }
+            const timestamp = Date.now(); // Obtiene el tiempo actual en milisegundos
+            const nombreBase = 'prtscrn'; // Puedes cambiar esto a lo que desees
+            const extension = 'png'; // Como estamos usando capturas, el formato es PNG
+
+            linkadress.value = `${nombreBase}_${timestamp}.${extension}`;
+
+            imagen.style.display = 'block'; // Mostrar la imagen
+            document.getElementById('pasteArea').style.display = 'none'; // Ocultar el área de pegado
+        };
+    }
+
+    // Evento para pegar una imagen en el área designada
+    document.addEventListener('DOMContentLoaded', function() {
+        const pasteArea = document.getElementById('pasteArea');
+
+        pasteArea.addEventListener('paste', function(event) {
+            const items = event.clipboardData.items;
+
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+
+                if (item.type.indexOf('image') !== -1) {
+                    const file = item.getAsFile();
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+                        // Enviar la imagen en base64 al servidor
+                        document.getElementById('imageData').value = e.target.result;
+
+                        ajustarImagen(e.target.result); // Llamar la función para ajustar imagen
+                    };
+
+                    reader.readAsDataURL(file); // Leer imagen como base64
+                }
+            }
+        });
+    });
+</script>
+<script>
     function quitaMensaje(){
         $(".talert").css("display", "none");
     }
-    function getWay(xid){
-        fetch(`/way/${xid}`)
+    function getAvailable(xid){
+        fetch(`/available/${xid}`)
             .then(response => response.json())
-            .then(jsondata => showWay(jsondata))
+            .then(jsondata => showAvailable(jsondata))
     }
 
-    function showWay(jsondata){
-        let reference = jsondata.reference;
+    function showAvailable(jsondata){
+        let available_amount = jsondata.available_amount;
+        let real_available_amount = jsondata.real_available_amount;
 
-        $("#label_reference").text(reference + ':');
+        document.getElementById("available_amount").value = available_amount;
+        document.getElementById("real_available_amount").value = real_available_amount;
+    }
+
+    function procesarValor(input) {
+        let valorActual = input.value.replace(/\./g, '').replace(',', '.');
+
+        // Convertimos el valor a un número flotante para realizar cálculos
+        let numeroSinFormato = parseFloat(valorActual);
+
+        document.getElementById('real_amount').value = numeroSinFormato;
+
+        // Aplicamos la máscara al valor del input
+        formatearNumero(input);
+    }
+
+    function formatearNumero(input) {
+        // Eliminar cualquier carácter que no sea un número o una coma
+        let valor = input.value.replace(/[^0-9,]/g, '');
+
+        // Si hay más de una coma, eliminamos las adicionales
+        if (valor.indexOf(',') !== -1) {
+            let partes = valor.split(',');
+            valor = partes[0] + ',' + partes[1].slice(0, 2);  // Limitar la parte decimal a dos dígitos
+        }
+
+        // Remover los puntos existentes para evitar conflictos
+        valor = valor.replace(/\./g, '');
+
+        // Añadir puntos como separadores de miles
+        let valorConMiles = valor.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+        // Actualizar el valor en el input
+        input.value = valorConMiles;
     }
 
     function sendMessage() {
@@ -318,17 +589,42 @@
         }
     }
 
-    function validar(){
+    function grabar(){
         var xseguir = true;
-        var xcanawilbank_id = document.getElementById("canawilbank_id").value;
-        if (xcanawilbank_id.length < 1){
+        var xcurrencybank_id = document.getElementById("currencybank_id").value;
+        if (xcurrencybank_id.length < 1){
             xseguir = false;
-            document.getElementById("canawilbank_id_error").style.display = "block";
+            document.getElementById("currencybank_id_error").style.display = "block";
         }
-        var xwaytopay_id = document.getElementById("waytopay_id").value;
-        if (xwaytopay_id.length < 1){
+        var xamount = document.getElementById("amount").value;
+        if (xamount.length < 1){
             xseguir = false;
-            document.getElementById("waytopay_id_error").style.display = "block";
+            document.getElementById("amount_error").style.display = "block";
+        } else {
+            var xreal_amount = document.getElementById("real_amount").value;
+            if (xreal_amount <= 0){
+                xseguir = false;
+                document.getElementById("amount_error").style.display = "block";
+            } else {
+                var xreal_available_amount = document.getElementById("real_available_amount").value;
+                if (parseFloat(xreal_amount) > parseFloat(xreal_available_amount)){
+                    xseguir = false;
+                    document.getElementById("amount_error2").style.display = "block";
+                } else {
+                    var xreal_mount_change = document.getElementById("real_mount_change").value;
+                    var xamount_rest = document.getElementById("amount_rest").value;
+                    let xdefamount = xreal_mount_change - xamount_rest;
+                    if (xreal_amount > xdefamount){
+                        xseguir = false;
+                        document.getElementById("amount_error3").style.display = "block";
+                    }
+                }
+            }
+        }
+        var xlinkaddress_i = document.getElementById("linkaddress_i").value;
+        if (xlinkaddress_i.length < 1){
+            xseguir = false;
+            document.getElementById("transaction_error").style.display = "block";
         }
         if (xseguir){
             document.view.submit();

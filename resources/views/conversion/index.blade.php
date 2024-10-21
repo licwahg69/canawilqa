@@ -67,7 +67,7 @@
                                             value="{{ $conversion->currency_description }} a {{ $conversion->currency_description2 }}">
                                         <td class="text-left">{{ $conversion->typeuser_char }}</td>
                                         @if ($conversion->two_decimals == 'Y')
-                                            <td width="60" class="text-right">{{ number_format($conversion->conversion_value, 2) }}</td>
+                                            <td width="60" class="text-right">{{ number_format($conversion->conversion_value,2,',','.') }}</td>
                                         @else
                                             <td width="60" class="text-right">{{ $conversion->conversion_value }}</td>
                                         @endif
@@ -172,7 +172,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 

@@ -98,7 +98,26 @@ class ResendImageController extends Controller
                 $transaction_id = request('transaction_id');
                 $type_screen = request('type_screen');
 
-                return view('transaction.photo', compact('transaction_id'));
+                $credit = auth()->user()->credit;
+
+                $creditcash = 'Y';
+                if ($credit == 'Y'){
+                    $sql = "SELECT id FROM credits where transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
+                    $credits = DB::select($sql);
+                    $credit_id = 0;
+                    foreach ($credits as $row2) {
+                        $credit_id = $row2->id;
+                    }
+                    if ($credit_id > 0){
+                        $creditcash = 'N';
+                    }
+                }
+
+                if($type_screen == 'W'){
+                    return view('transaction.photoweb', compact('transaction_id', 'credit', 'creditcash'));
+                } else {
+                    return view('transaction.photo', compact('transaction_id', 'credit', 'creditcash'));
+                }
                 break;
             case 'delete':
                 $transaction_id = $request->transaction_id;

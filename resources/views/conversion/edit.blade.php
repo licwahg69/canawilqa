@@ -26,7 +26,7 @@
                         </div>
                         <div class="col-md-3 form-group">
                             <label for="a_to_b">Descripción abreviada:</label>
-                            <input disabled type="text" class="form-control" id="a_to_b" name="a_to_b" onkeydown="quitaMensaje()" value="{{ old('a_to_b') ?? $conversion->a_to_b ?? old('a_to_b') }}" placeholder="Valor de la conversión">
+                            <input disabled type="text" class="form-control" id="a_to_b" name="a_to_b" onkeydown="quitaMensaje()" value="{{ old('a_to_b') ?? trim($conversion->a_to_b) ?? old('a_to_b') }}" placeholder="Valor de la conversión">
                         </div>
                     </div>
                     <div class="row">
@@ -89,6 +89,16 @@
                             </div>
                         </div>
                     </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-3 form-group">
+                            <label for="customer_commission">% Comisión del Aliado (*):</label>
+                            <input type="text" class="form-control" id="customer_commission" name="customer_commission" onkeydown="quitaMensaje()" onKeyPress="solonumeros(event)" value="{{ old('customer_commission') ?? $conversion->customer_commission ?? old('customer_commission') }}" placeholder="% Comisión del Aliado">
+                            <div id="customer_commission_error" class="talert" style='display: none;'>
+                                <p class="text-danger">La Comisión del Aliado es requerida</p>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-md-12 form-group">
                         <b>(*) Campos obligatorios</b>
                     </div>
@@ -113,7 +123,7 @@
 
 @section('footer')
 <div class="float-right d-sm-inline">
-    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} CANAWIL Cambios</label>, todos los derechos reservados.
+    <label class="text-primary">© {{ date_format(date_create(date("Y")),"Y") }} Cambios CANAWIL</label>, todos los derechos reservados.
 </div>
 @stop
 
@@ -154,6 +164,11 @@
         if  (xconversion_value.length < 1 || xconversion_value.value == 0.00){
             xseguir = false;
             document.getElementById("conversion_value_error").style.display = "block";
+        } else {
+            if (parseFloat(xconversion_value, 10) <= 0){
+                xseguir = false;
+                document.getElementById("conversion_value_error").style.display = "block";
+            }
         }
         var xreference_currency_id = document.getElementById("reference_currency_id").value;
         if  (xreference_currency_id.length < 1){
@@ -164,6 +179,21 @@
         if  (xreference_conversion_value.length < 1 || xreference_conversion_value.value == 0){
             xseguir = false;
             document.getElementById("reference_conversion_value_error").style.display = "block";
+        } else {
+            if (parseFloat(xreference_conversion_value, 10) <= 0){
+                xseguir = false;
+                document.getElementById("reference_conversion_value_error").style.display = "block";
+            }
+        }
+        var xcustomer_commission = document.getElementById("customer_commission").value;
+        if  (xcustomer_commission.length < 1 || xreference_conversion_value.value == 0){
+            xseguir = false;
+            document.getElementById("customer_commission_error").style.display = "block";
+        } else {
+            if (parseFloat(xcustomer_commission, 10) <= 0){
+                xseguir = false;
+                document.getElementById("customer_commission_error").style.display = "block";
+            }
         }
         let checkbox = document.getElementById('two_decimals');
         // Verificar si el checkbox está marcado

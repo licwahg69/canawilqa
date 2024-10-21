@@ -24,7 +24,7 @@
             <div class="container-fluid">
                 <a href="#">
                     <img src="/checkicon.png" alt="" width="60" height="55">
-                    <h4 style="color: #040305"><label class="text-start">CANAWIL</label></h4>
+                    <h4 style="color: #040305"><label class="text-start">Cambios CANAWIL</label></h4>
                 </a>
             </div>
         </nav>
