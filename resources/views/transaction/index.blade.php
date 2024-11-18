@@ -66,7 +66,7 @@
                                                 <td class="text-left text-danger"><b>{{ $transaction->id }}</b></td>
                                                 <td class="text-left text-danger"><b>{{ $transaction->comercial_name }}</b></td>
                                                 <td class="text-left text-danger"><b>{{ $transaction->a_to_b }}</b></td>
-                                                <td width="160" class="text-right text-danger"><b>{{ trim($transaction->mount_change_fm) }}{{$transaction->symbol2}} {{$transaction->currency2}}</b></td>
+                                                <td width="160" class="text-right text-danger"><b>{{ trim($transaction->mount_change_fm) }}{{$transaction->symbol2}} {{$transaction->currency2}} (*)</b></td>
                                                 <input type="hidden" id="nombre{{ $transaction->id }}"
                                                     value="{{ $transaction->complete_description }}">
                                                 @switch($transaction->sendstatus)
@@ -88,7 +88,7 @@
                                                 <td class="text-left text-danger">{{ $transaction->id }}</td>
                                                 <td class="text-left text-danger">{{ $transaction->comercial_name }}</td>
                                                 <td class="text-left text-danger">{{ $transaction->a_to_b }}</td>
-                                                <td width="160" class="text-right text-danger">{{ trim($transaction->mount_change_fm) }}{{$transaction->symbol2}} {{$transaction->currency2}}</td>
+                                                <td width="160" class="text-right text-danger">{{ trim($transaction->mount_change_fm) }}{{$transaction->symbol2}} {{$transaction->currency2}} (*)</td>
                                                 <input type="hidden" id="nombre{{ $transaction->id }}"
                                                     value="{{ $transaction->complete_description }}">
                                                 @switch($transaction->sendstatus)
@@ -210,7 +210,7 @@
                                                         <b>Monto a transferir:</b>
                                                     </div>
                                                     <div class="text-danger">
-                                                        <b>{{ trim($transaction2->mount_change_fm) }}{{$transaction2->symbol2}} {{$transaction2->currency2}}</b>
+                                                        <b>{{ trim($transaction2->mount_change_fm) }}{{$transaction2->symbol2}} {{$transaction2->currency2}} (*)</b>
                                                     </div>
                                                 </div>
                                             </td>
@@ -276,7 +276,7 @@
                                                         <b>Monto a transferir:</b>
                                                     </div>
                                                     <div class="text-danger">
-                                                        {{ trim($transaction2->mount_change_fm) }}{{$transaction2->symbol2}} {{$transaction2->currency2}}
+                                                        {{ trim($transaction2->mount_change_fm) }}{{$transaction2->symbol2}} {{$transaction2->currency2}} (*)
                                                     </div>
                                                 </div>
                                             </td>
@@ -456,6 +456,7 @@
                         <br>
                         {{ $transactions2->links() }}
                     </div>
+                    <label style="color:red">(*) Transacciones a crédito</label>
                 </div>
             </div>
         </div>

@@ -88,7 +88,7 @@ class ProfitController extends Controller
                 $transfers2 = V_admtransfers::whereMonth('transfer_date', $currentMonth)
                                 ->whereYear('transfer_date', $currentYear)
                                 ->where('rowstatus', 'ACT')
-                                ->orderBy('id', 'desc')
+                                ->orderBy('transaction_id', 'desc')
                                 ->simplePaginate(10);
                 $transfers2->withQueryString();
 
@@ -102,16 +102,20 @@ class ProfitController extends Controller
                         $a_to_b = $row3->a_to_b;
                         $currency_id = $row3->currency_id;
 
-                        $sql = "select sum(net_amount) as mount_value, sum(canawil_amount_withheld) as canawil_amount_withheld from v_admtransfers
+                        $sql = "select sum(net_amount2) as mount_value from v_transfers
                         where DATE_TRUNC('month', transfer_date) = DATE_TRUNC('month', CURRENT_DATE) and a_to_b = '".$a_to_b."' and rowstatus = 'ACT'";
                         $sum2 = DB::select($sql);
                         $general_mount_value = $sum2[0]->mount_value;
-                        $general_canawil_amount_withheld = $sum2[0]->canawil_amount_withheld;
 
                         $sql = "select * from currencies where id = ".$currency_id."";
                         $currencies1 = DB::select($sql);
                         $symbol = $currencies1[0]->symbol;
                         $currency = $currencies1[0]->currency;
+
+                        $sql = "select sum(canawil_amount_withheld) as canawil_amount_withheld from v_admtransfers
+                        where DATE_TRUNC('month', transfer_date) = DATE_TRUNC('month', CURRENT_DATE) and a_to_b = '".$a_to_b."' and rowstatus = 'ACT'";
+                        $sum3 = DB::select($sql);
+                        $general_canawil_amount_withheld = $sum3[0]->canawil_amount_withheld;
 
                         $datos2[] = [
                             'a_to_b' => $a_to_b,
@@ -135,7 +139,7 @@ class ProfitController extends Controller
                 $transfers = DB::select($sql);
                 $transfers2 = V_admtransfers::whereBetween('transfer_date', [$desde, $hasta])
                     ->where('rowstatus', 'ACT')
-                    ->orderBy('id', 'desc')
+                    ->orderBy('transaction_id', 'desc')
                     ->simplePaginate(10);
                 $transfers2->withQueryString();
 
@@ -149,16 +153,20 @@ class ProfitController extends Controller
                         $a_to_b = $row3->a_to_b;
                         $currency_id = $row3->currency_id;
 
-                        $sql = "select sum(net_amount) as mount_value, sum(canawil_amount_withheld) as canawil_amount_withheld from v_admtransfers
+                        $sql = "select sum(net_amount2) as mount_value from v_transfers
                         where transfer_date between '".$desde."' and '".$hasta."' and a_to_b = '".$a_to_b."' and rowstatus = 'ACT'";
                         $sum2 = DB::select($sql);
                         $general_mount_value = $sum2[0]->mount_value;
-                        $general_canawil_amount_withheld = $sum2[0]->canawil_amount_withheld;
 
                         $sql = "select * from currencies where id = ".$currency_id."";
                         $currencies1 = DB::select($sql);
                         $symbol = $currencies1[0]->symbol;
                         $currency = $currencies1[0]->currency;
+
+                        $sql = "select sum(canawil_amount_withheld) as canawil_amount_withheld from v_admtransfers
+                        where transfer_date between '".$desde."' and '".$hasta."' and a_to_b = '".$a_to_b."' and rowstatus = 'ACT'";
+                        $sum3 = DB::select($sql);
+                        $general_canawil_amount_withheld = $sum3[0]->canawil_amount_withheld;
 
                         $datos2[] = [
                             'a_to_b' => $a_to_b,

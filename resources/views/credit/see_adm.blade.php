@@ -54,9 +54,8 @@
         }
     }
 </style>
-<form action="/history" method="POST" id="view" name="view" class="formeli">
+<form action="/credit" method="POST" id="view" name="view" class="formeli">
     @csrf
-    <input type="hidden" id="report" name="report" value="{{$report}}">
     <input type="hidden" id="type_screen" name="type_screen" value="">
     <input type="hidden" id="toaction" name="toaction" value="">
     <div class="row">
@@ -354,7 +353,7 @@
                     <br>
                     <div class="row">
                         <div class="col-md-2 form-group text-center">
-                            <a href="/ret_admhistory/{{$desde}}/{{$hasta}}/{{$report}}/{{$user_id}}" class="btn btn-secondary btn-block">Volver  <i class="fa fa-arrow-circle-left"></i></a>
+                            <a href="/pendcredit" class="btn btn-secondary btn-block">Volver  <i class="fa fa-arrow-circle-left"></i></a>
                         </div>
                     </div>
                 </div>

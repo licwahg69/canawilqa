@@ -55,6 +55,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/proccess', 'App\Http\Controllers\TransferController@proccess');
     Route::get('/ret_history/{desde}/{hasta}', 'App\Http\Controllers\HistoryController@ret_history');
     Route::get('/ret_admhistory/{desde}/{hasta}/{reporte}/{userid}', 'App\Http\Controllers\HistoryController@ret_admhistory');
+    Route::get('/pendcredit', 'App\Http\Controllers\CreditController@pendcredit');
+    Route::get('/paycredit', 'App\Http\Controllers\CreditController@paycredit');
+    Route::get('/viewpay', 'App\Http\Controllers\CreditController@viewpay');
 
     Route::resource('/user', 'App\Http\Controllers\UserController');
     Route::resource('/license', 'App\Http\Controllers\LicenseController');
@@ -73,6 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('/transfer', 'App\Http\Controllers\TransferController');
     Route::resource('/buy', 'App\Http\Controllers\BuyController');
     Route::resource('/profit', 'App\Http\Controllers\ProfitController');
+    Route::resource('/credit', 'App\Http\Controllers\CreditController');
 });
 
 Route::post('/login2', 'App\Http\Controllers\UserController@login');
@@ -88,3 +92,4 @@ Route::get('/location2/{id}', 'App\Http\Controllers\UserController@location');
 Route::get('/town2/{id}', 'App\Http\Controllers\UserController@town');
 Route::get('/doc2/{id}', 'App\Http\Controllers\UserController@doc');
 Route::get('/v1/whatsapp/{token}', 'App\Http\Controllers\WhatsappController@whatsapp');
+Route::get('/v2/shopify/{order}', 'App\Http\Controllers\WhatsappController@shopify');

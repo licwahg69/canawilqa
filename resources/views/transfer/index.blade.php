@@ -24,7 +24,7 @@
 @stop
 
 @section('content_header')
-    <h1 class="m-0 text-primary text-center"><b>Transferencias en proceso que no han sido culminadas por que falta la imagen<label class="text-cyan">(Estatus: <i class="fas fa-traffic-light"></i> En proceso)</label></b></h1>
+    <h1 class="m-0 text-primary text-center"><b>Transferencias en proceso que no han sido culminadas<label class="text-cyan">(Estatus: <i class="fas fa-traffic-light"></i> En proceso)</label></b></h1>
 @stop
 
 @section('content')
@@ -54,26 +54,34 @@
                                     <th class="text-center">ID</th>
                                     <th class="text-center">Aliado o Usuario</th>
                                     <th class="text-center">Conversión</th>
-                                    <th width="160" class="text-center">Monto transferido</th>
+                                    <th width="160" class="text-center">Monto a transferir</th>
                                     <th class="text-center">Terminar</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($transfers as $transfer)
                                     <tr>
-                                        <td class="text-left">{{ $transfer->id }}</td>
-                                        <td class="text-left">{{ $transfer->comercial_name }}</td>
-                                        <td class="text-left">{{ $transfer->a_to_b }}</td>
-                                        <td width="160" class="text-right">{{ trim($transfer->mount_change_fm) }}{{$transfer->symbol2}} {{$transfer->currency2}}</td>
-                                        <input type="hidden" id="nombre{{ $transfer->id }}"
-                                            value="{{ $transfer->complete_description }}">
-                                           <td class="text-center">
-                                        @if ($permissions > 1)
-                                            <a href="#" onclick="validar('save_transfer',{{ $transfer->id }})"
-                                                class="btn btn-xs btn-default text-primary mx-1 shadow" title="Culminar transferencia a {{ $transfer->complete_description }}">
-                                                <i class="fa fa-lg fa-fw fa-first-aid"></i>
-                                            </a>
+                                        @if ($transfer->credit == 'Y')
+                                            <td class="text-left text-danger">{{ $transfer->id }}</td>
+                                            <td class="text-left text-danger">{{ $transfer->comercial_name }}</td>
+                                            <td class="text-left text-danger">{{ $transfer->a_to_b }}</td>
+                                            <td width="160" class="text-right text-danger">{{ trim($transfer->mount_change_fm) }}{{$transfer->symbol2}} {{$transfer->currency2}} (*)</td>
+                                        @else
+                                            <td class="text-left">{{ $transfer->id }}</td>
+                                            <td class="text-left">{{ $transfer->comercial_name }}</td>
+                                            <td class="text-left">{{ $transfer->a_to_b }}</td>
+                                            <td width="160" class="text-right">{{ trim($transfer->mount_change_fm) }}{{$transfer->symbol2}} {{$transfer->currency2}}</td>
                                         @endif
+                                        <input type="hidden" id="nombre{{ $transfer->id }}"
+                                                value="{{ $transfer->complete_description }}">
+                                        <td class="text-center">
+                                            @if ($permissions > 1)
+                                                <a href="#" onclick="validar('save_transfer',{{ $transfer->id }})"
+                                                    class="btn btn-xs btn-default text-primary mx-1 shadow" title="Culminar transferencia a {{ $transfer->complete_description }}">
+                                                    <i class="fa fa-lg fa-fw fa-first-aid"></i>
+                                                </a>
+                                            @endif
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -84,46 +92,89 @@
                             <tbody>
                                 @foreach($transfers2 as $transfer2)
                                 <tr>
-                                    <td>
-                                        <div class="row">
-                                            <div>
-                                                <b>ID:</b>
+                                    @if ($transfer->credit == 'Y')
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>ID:</b>
+                                                </div>
+                                                <div class="text-danger">
+                                                    {{ $transfer2->id }}
+                                                </div>
                                             </div>
-                                            <div>
-                                                {{ $transfer2->id }}
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Aliado o Usuario:</b>
+                                                </div>
+                                                <div class="text-danger">
+                                                    {{ $transfer2->comercial_name }}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="row">
-                                            <div>
-                                                <b>Aliado o Usuario:</b>
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Conversión:</b>
+                                                </div>
+                                                <div class="text-danger">
+                                                    {{ $transfer2->a_to_b }}
+                                                </div>
                                             </div>
-                                            <div>
-                                                {{ $transfer2->comercial_name }}
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Monto a transferir:</b>
+                                                </div>
+                                                <div class="text-danger">
+                                                    {{ trim($transfer2->mount_change_fm) }}{{$transfer2->symbol2}} {{$transfer2->currency2}} (*)
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="row">
-                                            <div>
-                                                <b>Conversión:</b>
+                                        </td>
+                                    @else
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>ID:</b>
+                                                </div>
+                                                <div>
+                                                    {{ $transfer2->id }}
+                                                </div>
                                             </div>
-                                            <div>
-                                                {{ $transfer2->a_to_b }}
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Aliado o Usuario:</b>
+                                                </div>
+                                                <div>
+                                                    {{ $transfer2->comercial_name }}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="row">
-                                            <div>
-                                                <b>Descripción:</b>
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Conversión:</b>
+                                                </div>
+                                                <div>
+                                                    {{ $transfer2->a_to_b }}
+                                                </div>
                                             </div>
-                                            <div>
-                                                {{ $transfer2->complete_description }}
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Monto a transferir:</b>
+                                                </div>
+                                                <div>
+                                                    {{ trim($transfer2->mount_change_fm) }}{{$transfer2->symbol2}} {{$transfer2->currency2}}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </td>
+                                        </td>
+                                    @endif
                                     <input type="hidden" id="nombre{{ $transfer2->id }}"
                                                 value="{{ $transfer2->complete_description }}">
                                     <td>
@@ -141,6 +192,7 @@
                         <br>
                         {{ $transfers2->links() }}
                     </div>
+                    <label style="color:red">(*) Transacciones a crédito</label>
                 </div>
             </div>
         </div>

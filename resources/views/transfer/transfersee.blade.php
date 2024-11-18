@@ -52,6 +52,17 @@
             height: 250px;
             margin-left: 25px;
         }
+        #tbank3 {
+            width: 100%;
+            font-size: 12px; /* Reducir el tamaño de fuente para una mejor legibilidad */
+            background-color: rgb(242, 245, 93)
+        }
+        #tbank3 tr {
+            display: flex;
+            flex-direction: column;
+            border: solid 1px gray;
+            padding: 1em;
+        }
     }
 </style>
 <form action="/transfer" method="POST" id="view" name="view" class="formeli">
@@ -209,7 +220,7 @@
                     <i class="fas fa-dollar-sign"></i> <b>Datos de la transferencia</b>
                 </div>
                 <div class="card-body">
-                    <div id="datatable3" style='display: block;'>
+                    <div id="datatable3" style='display: none;'>
                         <div class="row">
                             <div class="col-md-12 form-group">
                                 <table class="table table-striped table-bordered display responsive nowrap">
@@ -217,20 +228,24 @@
                                         <tr>
                                             <th class="text-center">Banco</th>
                                             <th class="text-center">Monto</th>
+                                            <th class="text-center">Tasa de compra</th>
                                             <th class="text-center">Fecha</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($transfers as $transfer)
+                                        @foreach ($transferbuys as $transferbuy)
                                             <tr>
                                                 <td class="text-left">
-                                                    <label>{{$transfer->currency_bankname}}</label>
+                                                    <label>{{$transferbuy->bankname}}</label>
                                                 </td>
                                                 <td class="text-right">
-                                                    <label>{{$transfer->transfer_amount_fm}}{{$transfer->symbol2}} {{$transfer->currency2}}</label>
+                                                    <label>{{$transferbuy->amount_fm}}{{$transferbuy->symbol2}} {{$transferbuy->currency2}}</label>
+                                                </td>
+                                                <td class="text-right">
+                                                    <label>{{$transferbuy->exchange_rate_fm}}{{$transferbuy->symbol2}} {{$transferbuy->currency2}}</label>
                                                 </td>
                                                 <td class="text-center">
-                                                    <label>{{\Carbon\Carbon::parse($transfer->transfer_date)->format('d-m-Y')}}</label>
+                                                    <label>{{\Carbon\Carbon::parse($transferbuy->transfer_date)->format('d-m-Y')}}</label>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -238,6 +253,56 @@
                                 </table>
                             </div>
                         </div>
+                    </div>
+                    <div id="datatable4" style='display: none;'>
+                        <table id="tbank3">
+                            <tbody>
+                                @foreach ($transferbuys as $transferbuy)
+                                    <tr>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Banco:</b>
+                                                </div>
+                                                <div>
+                                                    {{ $transferbuy->bankname }}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Monto:</b>
+                                                </div>
+                                                <div>
+                                                    {{$transferbuy->amount_fm}}{{$transferbuy->symbol2}} {{$transferbuy->currency2}}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Tasa de compra:</b>
+                                                </div>
+                                                <div>
+                                                    {{$transferbuy->exchange_rate_fm}}{{$transferbuy->symbol2}} {{$transferbuy->currency2}}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="row">
+                                                <div>
+                                                    <b>Fecha:</b>
+                                                </div>
+                                                <div>
+                                                    {{\Carbon\Carbon::parse($transferbuy->transfer_date)->format('d-m-Y')}}
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -354,17 +419,17 @@
 
 @section('js')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function() {
         if (window.innerWidth > 768) {
             document.getElementById("foto_web").style.display = "block";
             document.getElementById("foto_mobile").style.display = "none";
-            document.getElementById("foto_web2").style.display = "block";
-            document.getElementById("foto_mobile2").style.display = "none";
+            document.getElementById("datatable3").style.display = "block";
+            document.getElementById("datatable4").style.display = "none";
         } else {
             document.getElementById("foto_web").style.display = "none";
             document.getElementById("foto_mobile").style.display = "block";
-            document.getElementById("foto_web2").style.display = "none";
-            document.getElementById("foto_mobile2").style.display = "block";
+            document.getElementById("datatable3").style.display = "none";
+            document.getElementById("datatable4").style.display = "block";
         }
     });
 </script>

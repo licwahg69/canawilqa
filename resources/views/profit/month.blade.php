@@ -130,9 +130,9 @@
                             <thead class="bg-dark text-white">
                                 <tr>
                                     <th class="text-center">ID</th>
-                                    <th width="120" class="text-center">Fecha</th>
+                                    <th class="text-center">Fecha</th>
                                     <th class="text-center">Aliado/Usuario</th>
-                                    <th width="120" class="text-center">Monto Original</th>
+                                    <th width="120" class="text-center">Monto Origen</th>
                                     <th class="text-center">Tasa</th>
                                     <th width="90" class="text-center">Monto Transferido</th>
                                     <th width="120" class="text-center">Monto Neto</th>
@@ -144,15 +144,15 @@
                             <tbody>
                                 @foreach ($transfers as $transfer)
                                     <tr>
-                                        <td class="text-left">{{ $transfer->id }}</td>
-                                        <td width="120" class="text-left">{{ date('d-m-Y',strtotime($transfer->transfer_date)) }}</td>
+                                        <td class="text-left">{{ $transfer->transaction_id }}</td>
+                                        <td class="text-left">{{ date('d-m-Y',strtotime($transfer->transfer_date)) }}</td>
                                         <td class="text-left">{{ $transfer->comercial_name }}</td>
-                                        <td width="120" class="text-right">{{ trim($transfer->mount_value_fm) }} {{$transfer->currency}}</td>
-                                        <td class="text-right">{{ $transfer-> two_decimals == 'Y' ? number_format($transfer->conversion_value,2,',','.') : $transfer->conversion_value }}</td>
-                                        <td width="90" class="text-right">{{ trim($transfer->mount_change_fm) }} {{$transfer->currency2}}</td>
+                                        <td width="120" class="text-right">{{ $transfer->gross_amount2 == 0 ? trim($transfer->mount_value_fm) : trim($transfer->gross_amount2_fm) }} {{ $transfer->currency }}</td>
+                                        <td class="text-right">{{ $transfer->two_decimals == 'Y' ? number_format($transfer->conversion_value,2,',','.') : $transfer->conversion_value }}</td>
+                                        <td width="90" class="text-right">{{ $transfer->gross_amount2 == 0 ? trim($transfer->mount_change_fm) : trim($transfer->amount_fm) }} {{$transfer->currency2}}</td>
                                         <td width="120" class="text-right">{{ trim($transfer->gross_amount_fm) }} {{$transfer->currency}}</td>
-                                        <td class="text-right">{{ $transfer-> two_decimals == 'Y' ? number_format($transfer->exchange_rate,2,',','.') : $transfer->exchange_rate }}</td>
-                                        <td width="120" class="text-right" style="color: red">- {{ trim($transfer->amount_withheld_fm) }} {{$transfer->currency}}</td>
+                                        <td class="text-right">{{ $transfer->two_decimals == 'Y' ? number_format($transfer->exchange_rate,2,',','.') : $transfer->exchange_rate }}</td>
+                                        <td width="120" class="text-right" style="color: red">- {{ $transfer->amount_withheld2 == 0 ? trim($transfer->amount_withheld_fm) : trim($transfer->amount_withheld2_fm) }} {{$transfer->currency}}</td>
                                         <td width="120" class="text-right">{{ trim($transfer->canawil_amount_withheld_fm) }} {{$transfer->currency}}</td>
                                     </tr>
                                 @endforeach
@@ -170,7 +170,7 @@
                                                 <b>ID:</b>
                                             </div>
                                             <div>
-                                                {{ $transfer2->id }}
+                                                {{ $transfer2->transaction_id }}
                                             </div>
                                         </div>
                                     </td>
@@ -197,10 +197,10 @@
                                     <td>
                                         <div class="row">
                                             <div>
-                                                <b>Monto Original:</b>
+                                                <b>Monto Origen:</b>
                                             </div>
                                             <div>
-                                                {{ trim($transfer2->mount_value_fm) }} {{$transfer2->currency}}
+                                                {{ $transfer2->gross_amount2 == 0 ? trim($transfer2->mount_value_fm) : trim($transfer2->gross_amount2_fm) }} {{$transfer2->currency}}
                                             </div>
                                         </div>
                                     </td>
@@ -220,7 +220,7 @@
                                                 <b>Monto Transferido:</b>
                                             </div>
                                             <div>
-                                                {{ $transfer2->mount_change_fm }} {{$transfer2->currency2}}
+                                                {{ $transfer2->gross_amount2 == 0 ? trim($transfer2->mount_change_fm) : trim($transfer2->amount_fm) }} {{$transfer2->currency2}}
                                             </div>
                                         </div>
                                     </td>
@@ -250,7 +250,7 @@
                                                 <b>Comisión Cliente:</b>
                                             </div>
                                             <div style="color: red">
-                                                - {{ $transfer2->amount_withheld_fm }} {{$transfer2->currency}}
+                                                - {{ $transfer2->amount_withheld2 == 0 ? trim($transfer2->amount_withheld_fm) : trim($transfer2->amount_withheld2_fm) }} {{$transfer2->currency}}
                                             </div>
                                         </div>
                                     </td>

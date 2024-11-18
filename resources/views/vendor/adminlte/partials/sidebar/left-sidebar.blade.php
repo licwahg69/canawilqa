@@ -72,7 +72,7 @@
                                 @if ($user->nivel == 1)
                                     @if ($user->endnivel2 == 'Y')
                                         @if ($endline == 'N')
-                                            @if ($user->menupopup_name != 'Pagar Crédito')
+                                            @if ($user->menupopup_name != 'Pagar Crédito' && $user->menupopup_name != 'Pagos')
                                                 <li  class="nav-item">
                                                     @if (session('menupopup_id') == $user->menupopup_id)
                                                         <a class="nav-link active" href="#" onclick="document.getElementById('href').value = '{{$user->href}}'; document.getElementById('forcelogout').submit();">

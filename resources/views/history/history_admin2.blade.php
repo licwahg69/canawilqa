@@ -268,17 +268,17 @@
                             <tbody>
                                 @foreach ($transfers as $transfer)
                                     <tr>
-                                        <td class="text-left">{{ $transfer->id }}</td>
+                                        <td class="text-left">{{ $transfer->transaction_id }}</td>
                                         <td class="text-left">{{ date('d-m-Y',strtotime($transfer->transfer_date)) }}</td>
                                         <td class="text-left">{{ $transfer->comercial_name }}</td>
                                         <td class="text-left">{{ $transfer->a_to_b }}</td>
                                         <input type="hidden" id="nombre{{ $transfer->id }}"
                                             value="">
-                                        <td width="120" class="text-right">{{ trim($transfer->net_amount_fm) }} {{$transfer->currency}}</td>
-                                        <td width="120" class="text-right">{{ trim($transfer->mount_change_fm) }} {{$transfer->currency2}}</td>
+                                        <td width="120" class="text-right">{{ trim($transfer->net_amount2_fm) }} {{$transfer->currency}}</td>
+                                        <td width="120" class="text-right">{{ trim($transfer->transfer_amount_fm) }} {{$transfer->currency2}}</td>
                                         <td width="30" class="text-center">
                                             @if ($permissions > 0)
-                                                <a href="#" onclick="validar('see',{{ $transfer->id }})"
+                                                <a href="#" onclick="validar('see',{{ $transfer->transaction_id }})"
                                                     class="btn btn-xs btn-default text-success mx-1 shadow" title="Ver detalles">
                                                     <i class="fas fa-lg fa-fw fa-eye"></i>
                                                 </a>
@@ -300,7 +300,7 @@
                                                 <b>ID:</b>
                                             </div>
                                             <div>
-                                                {{ $transfer2->id }}
+                                                {{ $transfer2->transaction_id }}
                                             </div>
                                         </div>
                                     </td>
@@ -342,7 +342,7 @@
                                                 <b>Monto Recibido:</b>
                                             </div>
                                             <div>
-                                                {{ $transfer2->net_amount_fm }} {{$transfer2->currency}}
+                                                {{ $transfer2->net_amount2_fm }} {{$transfer2->currency}}
                                             </div>
                                         </div>
                                     </td>
@@ -352,13 +352,13 @@
                                                 <b>Monto Pagado:</b>
                                             </div>
                                             <div>
-                                                {{ $transfer2->mount_change_fm }} {{$transfer2->currency2}}
+                                                {{ $transfer2->transfer_amount_fm }} {{$transfer2->currency2}}
                                             </div>
                                         </div>
                                     </td>
                                     <td>
                                         @if ($permissions > 0)
-                                            <a href="#" onclick="validar('see',{{ $transfer2->id }})"
+                                            <a href="#" onclick="validar('see',{{ $transfer2->transaction_id }})"
                                                 class="btn btn-success btn-sm" data-bs-toggle="tooltip" data-bs-placement="top"
                                                 title="Ver detalles">Ver detalles <i class="fa fa-eye"></i>
                                             </a>

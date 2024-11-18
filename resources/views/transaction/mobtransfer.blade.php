@@ -7,23 +7,6 @@
 @stop
 
 @section('content')
-<style>
-    #pasteArea {
-        border: 2px dashed #ccc;
-        width: 600px;
-        height: 300px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        margin-left: 50px;
-    }
-
-    #imagen {
-        display: none;
-        margin-top: 20px;
-    }
-</style>
 <form action="/transaction" method="POST" id="view" name="view" class="formeli" enctype="multipart/form-data">
     @csrf
     <input type="hidden" id="transaction_id" name="transaction_id" value="{{$transactions[0]->id}}">
@@ -31,9 +14,8 @@
     <input type="hidden" id="type_screen" name="type_screen" value="">
     <input type="hidden" id="orientation" name="orientation" value="">
     <input type="hidden" id="origin" name="origin" value="{{$origin}}">
-    <input type="hidden" id="imageData" name="imageData">
     <input type="hidden" id="payer_cellphone" name="payer_cellphone" value="{{$transactions[0]->cellphone}}">
-    <input type="hidden" id="toaction" name="toaction" value="save_transfer_web">
+    <input type="hidden" id="toaction" name="toaction" value="photo_trans">
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -332,31 +314,39 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header"><i class="fas fa-desktop"></i>
-                                    <b> Agregar capture de la transacción bancaria hecha usando Win + Shift + S (*)</b>
+                                    <b> Agregar capture de la transacción bancaria hecha (*)</b>
                                 </div>
                                 <div class="card-body">
                                     <div class="form-group">
-                                        <div class="row">
-                                            <div class="col-md-2 form-group">
-                                            </div>
-                                            <div class="col-md-8 form-group">
-                                                <!-- Div donde se pegará la imagen -->
-                                                <div id="pasteArea">
-                                                    Pega aquí tu imagen (Ctrl + V)
+                                        <label class="control-label">
+                                            Imágen a Mostrar:
+                                        </label>
+                                        <div class="panel-body text-center" id='imgfoto'>
+                                            <div class="row">
+                                                <div class="col-md-12 form-group">
+                                                    <img width='300' height='200' alt="" id="imagen"
+                                                        style="max-width: 100%; max-height: 100%;" src="/images/capture.png" />
                                                 </div>
-
-                                                <!-- Imagen pegada será mostrada aquí -->
-                                                <img id="imagen" />
                                             </div>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-md-12 form-group">
-                                                <label class="control-label">Nombre del Archivo:</label>
-                                                <input readonly class="form-control" type="text" id="linkaddress_i"
-                                                    name="linkaddress_i" value="" maxlength='250'>
-                                                <div id="transaction_error" class="talert" style='display: none;'>
-                                                    <p class="text-danger">Debe hacer un capture para guardarla con la transacción</p>
-                                                </div>
+                                        <label class="control-label">
+                                            Nombre del Archivo:
+                                        </label>
+                                        <input readonly class="form-control" type="text" id="linkaddress_i"
+                                            name="linkaddress_i" value="" maxlength="250">
+                                        <div id="transaction_error" class="talert" style='display: none;'>
+                                            <p class="text-danger">Debe escoger una imagen para guardarla con la transacción</p>
+                                        </div>
+                                    </div>
+                                    <div class='col-lg-5 form-group'>
+                                        <label class="control-label">Buscar la imágen en su Celular</label>
+                                        <div class='btn btn-grey btn-file'>
+                                            <i class='fas fa-folder-open'></i> Seleccionar archivo
+                                            <input id='fileInput' name='fileInput' type='file' accept="image/*"
+                                                class='file-input' onchange='mostrarImagen()' onclick='quitaMensaje()'>
+                                            <div class="col-md-4" id='imagengif' style='display: none;'>
+                                                <img src="/images/loading.gif" border='0' /> Subiendo Archivo al Servidor, Espere un
+                                                momento...
                                             </div>
                                         </div>
                                     </div>
@@ -434,89 +424,6 @@
     });
 </script>
 <script>
-    // Función para ajustar la imagen pegada, calcular su orientación y tamaño
-    function ajustarImagen(imgSrc) {
-        var linkadress = document.getElementById('linkaddress_i');
-        var imagen = document.getElementById('imagen');
-        var img = new Image();
-        img.src = imgSrc;
-
-        img.onload = function() {
-            var width = img.width;
-            var height = img.height;
-
-            var aspectRatioWidth = width / height;
-            var aspectRatioHeight = height / width;
-
-            var orientation;
-            if (Math.abs(aspectRatioWidth - aspectRatioHeight) < 0.3) {
-                orientation = 'CUA';  // Cuadrada
-            } else if (aspectRatioWidth > aspectRatioHeight) {
-                orientation = 'HOR';  // Horizontal
-            } else {
-                orientation = 'VER';  // Vertical
-            }
-
-            document.getElementById("orientation").value = orientation;
-
-            // Ajustar tamaño según la orientación
-            imagen.src = imgSrc;
-            switch (orientation) {
-                case 'VER':
-                    imagen.style.width = "350px";
-                    imagen.style.height = "600px";
-                    imagen.style.marginLeft= "150px";
-                    break;
-                case 'CUA':
-                    imagen.style.width = "400px";
-                    imagen.style.height = "400px";
-                    imagen.style.marginLeft= "130px";
-                    break;
-                case 'HOR':
-                    imagen.style.width = "600px";
-                    imagen.style.height = "300px";
-                    imagen.style.marginLeft= "50px";
-                    break;
-            }
-            const timestamp = Date.now(); // Obtiene el tiempo actual en milisegundos
-            const nombreBase = 'prtscrn'; // Puedes cambiar esto a lo que desees
-            const extension = 'png'; // Como estamos usando capturas, el formato es PNG
-
-            linkadress.value = `${nombreBase}_${timestamp}.${extension}`;
-
-            imagen.style.display = 'block'; // Mostrar la imagen
-            document.getElementById('pasteArea').style.display = 'none'; // Ocultar el área de pegado
-        };
-    }
-
-    // Evento para pegar una imagen en el área designada
-    document.addEventListener('DOMContentLoaded', function() {
-        const pasteArea = document.getElementById('pasteArea');
-
-        pasteArea.addEventListener('paste', function(event) {
-            const items = event.clipboardData.items;
-
-            for (let i = 0; i < items.length; i++) {
-                const item = items[i];
-
-                if (item.type.indexOf('image') !== -1) {
-                    const file = item.getAsFile();
-                    const reader = new FileReader();
-
-                    reader.onload = function(e) {
-                        // Enviar la imagen en base64 al servidor
-                        document.getElementById('imageData').value = e.target.result;
-
-                        ajustarImagen(e.target.result); // Llamar la función para ajustar imagen
-                    };
-
-                    reader.readAsDataURL(file); // Leer imagen como base64
-                }
-            }
-        });
-    });
-</script>
-<script>
     function quitaMensaje(){
         $(".talert").css("display", "none");
     }
@@ -586,6 +493,67 @@
 
             // Abrir la URL en una nueva ventana sin refrescar la página actual
             window.open(url, '_blank');
+        }
+    }
+
+    function mostrarImagen() {
+        var input = document.getElementById('fileInput');
+        var imagen = document.getElementById('imagen');
+        var rutaInput = document.getElementById('linkaddress_i');
+
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+                var img = new Image();
+                img.src = e.target.result;
+
+                img.onload = function() {
+                    // Obtener las dimensiones de la imagen
+                    var width = img.width;
+                    var height = img.height;
+
+                    // Calcular las relaciones de aspecto
+                    var aspectRatioWidth = width / height;
+                    var aspectRatioHeight = height / width;
+
+                    // Determinar la orientación
+                    var orientation;
+                    if (Math.abs(aspectRatioWidth - aspectRatioHeight) < 0.3) {
+                        orientation = 'CUA';
+                    } else if (aspectRatioWidth > aspectRatioHeight) {
+                        orientation = 'HOR';
+                    } else {
+                        orientation = 'VER';
+                    }
+
+                    // Asignar la orientación al campo oculto
+                    document.getElementById("orientation").value = orientation;
+
+                    // Asignar la imagen y los estilos según la orientación
+                    imagen.src = e.target.result;
+
+                    switch (orientation){
+                        case 'VER':
+                            imagen.style.width = "300px";
+                            imagen.style.height = "400px";
+                            break;
+                        case 'CUA':
+                            imagen.style.width = "250px";
+                            imagen.style.height = "250px";
+                            break;
+                        case 'HOR':
+                            imagen.style.width = "300px";
+                            imagen.style.height = "200px";
+                            break;
+                    }
+
+                    var nombreArchivo = input.files[0].name;
+                    rutaInput.value = nombreArchivo;
+                };
+            };
+
+            reader.readAsDataURL(input.files[0]);
         }
     }
 

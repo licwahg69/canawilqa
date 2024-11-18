@@ -233,8 +233,11 @@ class TransferController extends Controller
 
                 $onlycellphone = str_replace($phone_code, '', $cellphone);
 
-                return view('transfer.see', compact('transactions', 'transfers', 'phone_code',
-                'onlycellphone'));
+                $sql = "SELECT * FROM v_transferbuys where transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
+                $transferbuys = DB::select($sql);
+
+                return view('transfer.transfersee', compact('transactions', 'transfers', 'phone_code',
+                'onlycellphone', 'transferbuys'));
                 break;
          }
     }

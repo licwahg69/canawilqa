@@ -44,4 +44,49 @@ class WhatsappController extends Controller
         return view('whatsapp.transfer', compact('transfers', 'transfers2', 'phone_code',
         'onlycellphone'));
     }
+
+    public function shopify($order)
+    {
+        header('Access-Control-Allow-Origin: http://localhost:8001');
+        header('Content-Type: application/json');
+
+        $shopify_access_token = getenv('SHOPIFY_ACCESS_TOKEN');
+
+        // Initialize cURL
+        $ch = curl_init();
+
+        //https://30081f-72.myshopify.com/admin/api/2024-10/graphql.json
+
+        // Configure cURL options
+        // curl_setopt($ch, CURLOPT_URL, "https://30081f-72.myshopify.com/admin/api/2024-10/orders/" . $order . ".json");
+        curl_setopt($ch, CURLOPT_URL, "https://30081f-72.myshopify.com/admin/api/2024-10/graphql.json");
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'X-Shopify-Access-Token: ' . $shopify_access_token
+        ));
+
+        // Execute cURL request
+    $response = curl_exec($ch);
+
+    // Check if any errors occurred during the request
+    if (curl_errno($ch)) {
+        echo 'Curl error: ' . curl_error($ch);
+        curl_close($ch);
+        return;  // Terminate the function if there is an error
+    }
+
+    // Close cURL resource
+    curl_close($ch);
+
+    // Decode JSON to a PHP array
+    $data = json_decode($response, true);
+
+    // Setting headers to return JSON
+    header('Content-Type: application/json');
+
+    // Return data in JSON format
+    echo json_encode($data);
+
+    }
 }

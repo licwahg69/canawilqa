@@ -316,7 +316,6 @@
             </div>
         </div>
     </div>
-    <input type="hidden" id="nombrelimina" name="nombrelimina" value="">
 </form>
 <form action="/force-logout" id="forcelogout" name="forcelogout" method="post">
     @csrf
@@ -384,39 +383,11 @@
         });
     </script>
 <script>
-    function crear() {
-        document.getElementById('toaction').value = 'create';
-        document.view.submit();
-    }
     function validar(xaccion, xid) {
-        var identificador = 'nombre' + xid;
-        var nombre = '"'+document.getElementById(identificador).value+'"';
-        document.getElementById('nombrelimina').value = nombre;
         document.getElementById('toaction').value = xaccion;
         document.getElementById('transaction_id').value = xid;
 
-        if (xaccion == "delete") {
-            $('.formeli').submit(function(e) {
-                e.preventDefault();
-                var delnombre = $('#nombrelimina').val();
-                Swal.fire({
-                    title: '¡Confirmar!',
-                    text: "¿Realmente desea eliminar la Transacción " + delnombre + "?",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Eliminar',
-                    cancelButtonText: 'Cancelar'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.submit();
-                    }
-                })
-            });
-        } else {
-            document.view.submit();
-        }
+        document.view.submit();
     }
 </script>
 @stop
