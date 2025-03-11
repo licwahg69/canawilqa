@@ -8,13 +8,18 @@ use App\Models\Credit;
 use App\Models\Document;
 use App\Models\Transaction;
 use App\Models\Transfer;
+use App\Models\WholesalerPayment;
+use App\Models\WholesalerPaymentDetail;
 use App\Models\TransferBuy;
 use App\Models\V_transfer;
+use App\Models\V_user;
 use App\Models\V_admtransfers;
 use App\Models\V_transaction;
 use App\Models\Payer;
 use App\Models\TypeDoc;
 use App\Models\V_document;
+use App\Models\V_wholesaler_payments;
+use App\Models\V_wholesaler_payment_details;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -47,6 +52,14 @@ class TransactionController extends Controller
             case 5:
                 $menu_name = 'PROCESOS';
                 $menupopup_name = 'En proceso';
+                break;
+            case 6:
+                $menu_name = 'PROCESOS';
+                $menupopup_name = 'Pagar a Mayoristas';
+                break;
+            case 7:
+                $menu_name = 'REPORTES';
+                $menupopup_name = 'Histórico de Cobros';
                 break;
         }
 
@@ -1181,6 +1194,126 @@ class TransactionController extends Controller
                     }
                 }
                 break;
+            case 'wholesaler':
+                $wholesaler_id = $request->wholesaler_id;
+
+                $sql = "SELECT * FROM v_users where id = ".$wholesaler_id." and rowstatus = 'ACT'";
+                $users = DB::select($sql);
+
+                // Construye la consulta SQL en múltiples líneas
+                $sql = "
+                SELECT *
+                FROM v_admtransfers
+                WHERE user_id IN (
+                    SELECT DISTINCT affiliate_id
+                    FROM affiliates
+                    WHERE wholesaler_id = ?
+                )
+                AND transaction_id NOT IN (
+                    SELECT DISTINCT transaction_id
+                    FROM wholesaler_payment_details
+                )
+                ";
+                // Ejecuta la consulta utilizando el método DB::select con bound parameters
+                $admtransfers = DB::select($sql, [$wholesaler_id]);
+
+                $sql = "
+                SELECT sum(wholesaler_amount) as sum_wholesaler_payment
+                FROM v_admtransfers
+                WHERE user_id IN (
+                    SELECT DISTINCT affiliate_id
+                    FROM affiliates
+                    WHERE wholesaler_id = ?
+                )
+                AND transaction_id NOT IN (
+                    SELECT DISTINCT transaction_id
+                    FROM wholesaler_payment_details
+                )
+                ";
+                // Ejecuta la consulta utilizando el método DB::select con bound parameters
+                $sumwholesaler = DB::select($sql, [$wholesaler_id]);
+
+                $mount_sumwholesaler = 0.00;
+                foreach($sumwholesaler as $row){
+                    $mount_sumwholesaler = $row->sum_wholesaler_payment;
+                }
+
+                return view('transaction.wholesaler', compact('users', 'admtransfers', 'mount_sumwholesaler'));
+                break;
+            case 'wholesaler_pay':
+                $wholesaler_id = request('wholesaler_id');
+                $currency_id = request('currency_id');
+                $total_amount = request('total_amount');
+                $real_payment_date = request('real_payment_date');
+
+                // Captura el valor del campo 'selected_ids' desde el request
+                $selectedIdsString = $request->input('selected_ids');
+
+                // Convierte la cadena separada por comas en un array
+                if ($selectedIdsString) {
+                    $selectedIds = explode(',', $selectedIdsString);
+                } else {
+                    $selectedIds = [];
+                }
+
+                $WholesalerPayment = new WholesalerPayment();
+
+                $WholesalerPayment->wholesaler_id = $wholesaler_id;
+                $WholesalerPayment->currency_id = $currency_id;
+                $WholesalerPayment->date = $real_payment_date;
+                $WholesalerPayment->amount = $total_amount;
+
+                $WholesalerPayment->save();
+
+                $wholesalerpayment_id = $WholesalerPayment->id;
+
+                foreach ($selectedIds as $selectedId) {
+                    // Aquí $selectedId contiene cada ID del array $selectedIds
+                    $transferbuy_id = $selectedId;
+
+                    $sql = "SELECT transaction_id FROM v_transferbuys where id = ".$transferbuy_id." and rowstatus = 'ACT'";
+                    $transfer_buys = DB::select($sql);
+                    $transaction_id = $transfer_buys[0]->transaction_id;
+
+                    $sql = "SELECT id FROM wholesaler_payment_details where wholesalerpayment_id = ".$wholesalerpayment_id." and transaction_id = ".$transaction_id." and rowstatus = 'ACT'";
+                    $wholesaler_payment_details_id = DB::select($sql);
+                    $id = 0;
+                    foreach($wholesaler_payment_details_id as $row2){
+                        $id = $row2->id;
+                    }
+
+                    if ($id == 0){
+                        $WholesalerPaymentDetail = new WholesalerPaymentDetail();
+
+                        $WholesalerPaymentDetail->wholesalerpayment_id = $wholesalerpayment_id;
+                        $WholesalerPaymentDetail->transaction_id = $transaction_id;
+
+                        $WholesalerPaymentDetail->save();
+                    }
+                }
+
+                $permissions = $this->permissions(6);
+
+                // Obtener todos los empleados de esa compañia con status activo de la BD
+                $sql = "SELECT * FROM v_users where role ='MAY' and rowstatus = 'ACT'";
+                $users = DB::select($sql);
+
+                $users2 = V_user::where('role', 'MAY')->where('rowstatus', 'ACT')->orderBy('name', 'asc')->simplePaginate(10);
+                $users2->withQueryString();
+
+                return view('transaction.indexwholesaler', compact('users', 'users2', 'permissions'));
+                break;
+            case 'wholesalerhistory':
+                $wholesalerpayment_id = request('wholesalerpayment_id');
+
+                $sql = "SELECT * FROM v_wholesaler_payment_details where wholesalerpayment_id = ".$wholesalerpayment_id." and rowstatus = 'ACT'";
+                $wholesaler_payment_details = DB::select($sql);
+
+                $wholesaler_payment_details2 = V_wholesaler_payment_details::where('wholesalerpayment_id', $wholesalerpayment_id)->where('rowstatus', 'ACT')->orderBy('affilieate_comercial_name', 'asc')->simplePaginate(10);
+                $wholesaler_payment_details2->withQueryString();
+
+                return view('transaction.wholesaler_paydetail', compact('wholesaler_payment_details', 'wholesaler_payment_details2'));
+                break;
         }
     }
 
@@ -1675,5 +1808,49 @@ class TransactionController extends Controller
                 'datos2'));
                 break;
         }
+    }
+
+    public function wholesaler_payment()
+    {
+        $prole = auth()->user()->role;
+        switch ($prole) {
+            case 'ADM':
+                session(['menupopup_id' => 48]);
+                break;
+        }
+
+        $permissions = $this->permissions(6);
+
+        // Obtener todos los empleados de esa compañia con status activo de la BD
+        $sql = "SELECT * FROM v_users where role ='MAY' and rowstatus = 'ACT'";
+        $users = DB::select($sql);
+
+        $users2 = V_user::where('role', 'MAY')->where('rowstatus', 'ACT')->orderBy('name', 'asc')->simplePaginate(10);
+        $users2->withQueryString();
+
+        return view('transaction.indexwholesaler', compact('users', 'users2', 'permissions'));
+    }
+
+    public function wholesaler_report()
+    {
+        $puser_id = auth()->user()->id;
+        $prole = auth()->user()->role;
+
+        switch ($prole) {
+            case 'MAY':
+                session(['menupopup_id' => 45]);
+                break;
+        }
+
+        $permissions = $this->permissions(7);
+
+        // Obtener todos los empleados de esa compañia con status activo de la BD
+        $sql = "SELECT * FROM v_wholesaler_payments where wholesaler_id = ".$puser_id." and rowstatus = 'ACT'";
+        $wholesaler_payments = DB::select($sql);
+
+        $wholesaler_payments2 = V_wholesaler_payments::where('wholesaler_id', $puser_id)->where('rowstatus', 'ACT')->orderBy('date', 'desc')->simplePaginate(10);
+        $wholesaler_payments2->withQueryString();
+
+        return view('transaction.indexwholesalerpayment', compact('wholesaler_payments', 'wholesaler_payments2', 'permissions'));
     }
 }

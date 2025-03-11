@@ -9,7 +9,7 @@
 @section('content')
 <form action="/license" method="POST" id="view" name="view">
     @csrf
-    <input type="hidden" id="toaction" name="toaction" value="create">
+    <input type="hidden" id="toaction" name="toaction" value="create2">
     <div class="row">
         <div class="col-12">
             <div class="card">
@@ -22,9 +22,7 @@
                             <label for="role" class="form-label"><b>Licencia (*):</b></label>
                             <select id="role" name="role" class="form-control" onchange="quitaMensaje()">
                                 <option value="">Seleccionar</option>
-                                <option value="ADM">Administrador</option>
                                 <option value="ALI">Aliado Comercial</option>
-                                <option value="MAY">Aliado Mayorista</option>
                                 <option value="USU">Usuario</option>
                             </select>
                             <div id="role_error" class="talert" style='display: none;'>

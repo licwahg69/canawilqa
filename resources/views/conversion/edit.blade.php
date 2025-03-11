@@ -91,11 +91,18 @@
                     </div>
                     <hr>
                     <div class="row">
-                        <div class="col-md-3 form-group">
-                            <label for="customer_commission">% Comisión del Aliado (*):</label>
-                            <input type="text" class="form-control" id="customer_commission" name="customer_commission" onkeydown="quitaMensaje()" onKeyPress="solonumeros(event)" value="{{ old('customer_commission') ?? $conversion->customer_commission ?? old('customer_commission') }}" placeholder="% Comisión del Aliado">
+                        <div class="col-md-4 form-group">
+                            <label for="customer_commission">% Comisión del Aliado Comercial (*):</label>
+                            <input type="text" class="form-control" id="customer_commission" name="customer_commission" onkeydown="quitaMensaje()" onKeyPress="solonumeros(event)" value="{{ old('customer_commission') ?? $conversion->customer_commission ?? old('customer_commission') }}" placeholder="% Comisión del Aliado Comercial">
                             <div id="customer_commission_error" class="talert" style='display: none;'>
-                                <p class="text-danger">La Comisión del Aliado es requerida</p>
+                                <p class="text-danger">La Comisión del Aliado Comercial es requerida</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label for="wholesaler_commission">% Comisión del Aliado Mayorista (*):</label>
+                            <input type="text" class="form-control" id="wholesaler_commission" name="wholesaler_commission" onkeydown="quitaMensaje()" onKeyPress="solonumeros(event)" value="{{ old('wholesaler_commission') ?? $conversion->wholesaler_commission ?? old('wholesaler_commission') }}" placeholder="% Comisión del Aliado Mayorista">
+                            <div id="wholesaler_commission_error" class="talert" style='display: none;'>
+                                <p class="text-danger">La Comisión del Aliado Mayorista es requerida</p>
                             </div>
                         </div>
                     </div>
@@ -186,13 +193,23 @@
             }
         }
         var xcustomer_commission = document.getElementById("customer_commission").value;
-        if  (xcustomer_commission.length < 1 || xreference_conversion_value.value == 0){
+        if  (xcustomer_commission.length < 1 || xcustomer_commission.value == 0){
             xseguir = false;
             document.getElementById("customer_commission_error").style.display = "block";
         } else {
             if (parseFloat(xcustomer_commission, 10) <= 0){
                 xseguir = false;
                 document.getElementById("customer_commission_error").style.display = "block";
+            }
+        }
+        var xwholesaler_commission = document.getElementById("wholesaler_commission").value;
+        if  (xwholesaler_commission.length < 1 || xwholesaler_commission.value == 0){
+            xseguir = false;
+            document.getElementById("wholesaler_commission_error").style.display = "block";
+        } else {
+            if (parseFloat(xwholesaler_commission, 10) <= 0){
+                xseguir = false;
+                document.getElementById("wholesaler_commission_error").style.display = "block";
             }
         }
         let checkbox = document.getElementById('two_decimals');

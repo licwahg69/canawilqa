@@ -110,6 +110,9 @@ class UserController extends Controller
             case 'USU':
                 session(['menupopup_id' => 23]);
                 break;
+            case 'MAY':
+                session(['menupopup_id' => 46]);
+                break;
         }
 
         $user_id = auth()->user()->id;
@@ -556,6 +559,9 @@ class UserController extends Controller
                 break;
             case 'USU':
                 session(['menupopup_id' => 24]);
+                break;
+            case 'MAY':
+                session(['menupopup_id' => 47]);
                 break;
         }
 

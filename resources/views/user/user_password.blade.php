@@ -155,6 +155,10 @@
                                             <input disabled class="form-control height" type="text" id="role_name" name="role_name" placeholder="Correo Electrónico"
                                                 maxlength=191 value="Aliado Comercial" onkeypress="quitaMensaje()">
                                         @endif
+                                        @if ($user->role == 'MAY')
+                                            <input disabled class="form-control height" type="text" id="role_name" name="role_name" placeholder="Correo Electrónico"
+                                                maxlength=191 value="Aliado Mayorista" onkeypress="quitaMensaje()">
+                                        @endif
                                         @if ($user->role == 'USU')
                                             <input disabled class="form-control height" type="text" id="role_name" name="role_name" placeholder="Correo Electrónico"
                                                 maxlength=191 value="Usuario" onkeypress="quitaMensaje()">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\MailHPfree;
 use App\Models\User;
+use App\Models\Affiliate;
 use App\Models\Hpemail;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -123,6 +124,55 @@ class LicenseController extends Controller
 
                 return redirect('/home');
                 break;
+            case 'create2':
+                $puser_id = auth()->user()->id;
+
+                $email = request('email');
+                $fecha_actual = Carbon::now();
+                $email_token = '26ce7fcd703c918cb411e9397a2e8580f72a85a6c532b7d26ea397a2b36b';
+
+                $User = new User();
+
+                $User->password = '';
+                $User->name = request('name');
+                $User->gender = request('gender');
+                $User->role = request('role');
+                if (request('gender') == 'MAS'){
+                    $User->profile_photo_path = '/avatar_sinfotom.png';
+                } else {
+                    $User->profile_photo_path = '/avatar_sinfotof.png';
+                }
+                $User->email = $email;
+                $User->email_token = $email_token;
+                $User->email_verified_at = $fecha_actual;
+
+                $User->save();
+
+                $user_id = $User->id;
+
+                $Affiliate = new Affiliate();
+
+                $Affiliate->wholesaler_id = $puser_id;
+                $Affiliate->affiliate_id = $user_id;
+
+                $Affiliate->save();
+
+                $url = env('EMAIL_USER_ADDRESS').$email.'/'.$email_token.' ';
+
+                $Hpemail = new Hpemail();
+
+                $Hpemail->name = request('name');
+                $Hpemail->gender = request('gender');
+                $Hpemail->role = request('role');
+                $Hpemail->email = $email;
+                $Hpemail->url = $url;
+
+                $Hpemail->save();
+
+                Mail::to($email)->send(new MailHPfree($Hpemail));
+
+                return redirect('/home');
+                break;
         }
     }
 
@@ -156,5 +206,17 @@ class LicenseController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function license2()
+    {
+        $prole = auth()->user()->role;
+        switch ($prole) {
+            case 'MAY':
+                session(['menupopup_id' => 44]);
+                break;
+        }
+
+        return view('license.new2');
     }
 }

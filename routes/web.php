@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\View;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,7 +26,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/createdoc', 'App\Http\Controllers\TransactionController@createdoc');
     Route::post('/send-whatsapp', [App\Http\Controllers\WhatsappController::class, 'sendWhatsAppMessage']);
 
-    Route::get('/email/{email}', 'App\Http\Controllfindnumdoccreatedocers\UserController@email');
+    Route::get('/email/{email}', 'App\Http\Controllers\UserController@email');
     Route::get('/changep', 'App\Http\Controllers\UserController@changep');
     Route::get('/config', 'App\Http\Controllers\UserController@config');
     Route::get('/serial/{id}', 'App\Http\Controllers\TransactionController@serial');
@@ -58,6 +59,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/pendcredit', 'App\Http\Controllers\CreditController@pendcredit');
     Route::get('/paycredit', 'App\Http\Controllers\CreditController@paycredit');
     Route::get('/viewpay', 'App\Http\Controllers\CreditController@viewpay');
+    Route::get('/license2', 'App\Http\Controllers\LicenseController@license2');
+    Route::get('/wholesaler_payment', 'App\Http\Controllers\TransactionController@wholesaler_payment');
+    Route::get('/wholesaler_report', 'App\Http\Controllers\TransactionController@wholesaler_report');
 
     Route::resource('/user', 'App\Http\Controllers\UserController');
     Route::resource('/license', 'App\Http\Controllers\LicenseController');
